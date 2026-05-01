@@ -741,6 +741,16 @@ class AppState extends ChangeNotifier {
         'card_payment_info_body_ru': settings.cardPaymentInfoBodyRu,
         'card_payment_info_body_uz': settings.cardPaymentInfoBodyUz,
         'card_payment_info_body_en': settings.cardPaymentInfoBodyEn,
+        'card_payment_unavailable_title': settings.cardPaymentUnavailableTitle,
+        'card_payment_unavailable_body': settings.cardPaymentUnavailableBody,
+        'card_payment_unavailable_title_ru': settings.cardPaymentUnavailableTitleRu,
+        'card_payment_unavailable_title_uz': settings.cardPaymentUnavailableTitleUz,
+        'card_payment_unavailable_title_en': settings.cardPaymentUnavailableTitleEn,
+        'card_payment_unavailable_body_ru': settings.cardPaymentUnavailableBodyRu,
+        'card_payment_unavailable_body_uz': settings.cardPaymentUnavailableBodyUz,
+        'card_payment_unavailable_body_en': settings.cardPaymentUnavailableBodyEn,
+        'card_payment_unavailable_card_number':
+            settings.cardPaymentUnavailableCardNumber,
       };
 
   Map<String, dynamic> _notificationToJson(NotificationItem item) => {

@@ -57,6 +57,8 @@
   "paymentMethod": "To‘lov usuli",
   "payByCard": "Karta",
   "payByCash": "Naqd",
+  "copy": "Nusxalash",
+  "copied": "Nusxalandi",
   "youHaveBonuses": "Sizda {count} bonus bor",
   "@youHaveBonuses": {
     "placeholders": {

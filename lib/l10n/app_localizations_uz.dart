@@ -181,6 +181,12 @@ class AppLocalizationsUz extends AppLocalizations {
   String get payByCash => 'Naqd';
 
   @override
+  String get copy => 'Nusxalash';
+
+  @override
+  String get copied => 'Nusxalandi';
+
+  @override
   String youHaveBonuses(Object count) {
     return 'Sizda $count bonus bor';
   }

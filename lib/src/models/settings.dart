@@ -20,6 +20,15 @@ class AppSettings {
     required this.cardPaymentInfoBodyRu,
     required this.cardPaymentInfoBodyUz,
     required this.cardPaymentInfoBodyEn,
+    required this.cardPaymentUnavailableTitle,
+    required this.cardPaymentUnavailableBody,
+    required this.cardPaymentUnavailableTitleRu,
+    required this.cardPaymentUnavailableTitleUz,
+    required this.cardPaymentUnavailableTitleEn,
+    required this.cardPaymentUnavailableBodyRu,
+    required this.cardPaymentUnavailableBodyUz,
+    required this.cardPaymentUnavailableBodyEn,
+    required this.cardPaymentUnavailableCardNumber,
   });
 
   final String cafeName;
@@ -42,8 +51,26 @@ class AppSettings {
   final String? cardPaymentInfoBodyRu;
   final String? cardPaymentInfoBodyUz;
   final String? cardPaymentInfoBodyEn;
+  final String? cardPaymentUnavailableTitle;
+  final String? cardPaymentUnavailableBody;
+  final String? cardPaymentUnavailableTitleRu;
+  final String? cardPaymentUnavailableTitleUz;
+  final String? cardPaymentUnavailableTitleEn;
+  final String? cardPaymentUnavailableBodyRu;
+  final String? cardPaymentUnavailableBodyUz;
+  final String? cardPaymentUnavailableBodyEn;
+  final String? cardPaymentUnavailableCardNumber;
 
   factory AppSettings.fromJson(Map<String, dynamic> json) {
+    final cardPaymentText =
+        _asNullableString(json['card_payment_text']) ??
+            _asNullableString(json['card_payment_unavailable_body']) ??
+            _asNullableString(json['card_payment_unavailable_text']) ??
+            _asNullableString(json['card_payment_disabled_body']) ??
+            _asNullableString(json['card_payment_disabled_text']) ??
+            _asNullableString(json['card_payment_off_body']) ??
+            _asNullableString(json['card_payment_off_text']);
+    final extractedCardNumber = _extractCardNumber(cardPaymentText);
     return AppSettings(
       cafeName: _asString(json['cafe_name']),
       phone: _asString(json['phone']),
@@ -90,6 +117,51 @@ class AppSettings {
       cardPaymentInfoBodyEn:
           _asNullableString(json['card_payment_info_body_en']) ??
               _asNullableString(json['card_payment_info_text_en']),
+      cardPaymentUnavailableTitle: _asNullableString(
+        json['card_payment_unavailable_title'] ??
+            json['card_payment_disabled_title'] ??
+            json['card_payment_off_title'],
+      ),
+      cardPaymentUnavailableBody: cardPaymentText,
+      cardPaymentUnavailableTitleRu:
+          _asNullableString(json['card_payment_unavailable_title_ru']) ??
+              _asNullableString(json['card_payment_disabled_title_ru']) ??
+              _asNullableString(json['card_payment_off_title_ru']),
+      cardPaymentUnavailableTitleUz:
+          _asNullableString(json['card_payment_unavailable_title_uz']) ??
+              _asNullableString(json['card_payment_disabled_title_uz']) ??
+              _asNullableString(json['card_payment_off_title_uz']),
+      cardPaymentUnavailableTitleEn:
+          _asNullableString(json['card_payment_unavailable_title_en']) ??
+              _asNullableString(json['card_payment_disabled_title_en']) ??
+              _asNullableString(json['card_payment_off_title_en']),
+      cardPaymentUnavailableBodyRu:
+          _asNullableString(json['card_payment_unavailable_body_ru']) ??
+              _asNullableString(json['card_payment_unavailable_text_ru']) ??
+              _asNullableString(json['card_payment_disabled_body_ru']) ??
+              _asNullableString(json['card_payment_disabled_text_ru']) ??
+              _asNullableString(json['card_payment_off_body_ru']) ??
+              _asNullableString(json['card_payment_off_text_ru']),
+      cardPaymentUnavailableBodyUz:
+          _asNullableString(json['card_payment_unavailable_body_uz']) ??
+              _asNullableString(json['card_payment_unavailable_text_uz']) ??
+              _asNullableString(json['card_payment_disabled_body_uz']) ??
+              _asNullableString(json['card_payment_disabled_text_uz']) ??
+              _asNullableString(json['card_payment_off_body_uz']) ??
+              _asNullableString(json['card_payment_off_text_uz']),
+      cardPaymentUnavailableBodyEn:
+          _asNullableString(json['card_payment_unavailable_body_en']) ??
+              _asNullableString(json['card_payment_unavailable_text_en']) ??
+              _asNullableString(json['card_payment_disabled_body_en']) ??
+              _asNullableString(json['card_payment_disabled_text_en']) ??
+              _asNullableString(json['card_payment_off_body_en']) ??
+              _asNullableString(json['card_payment_off_text_en']),
+      cardPaymentUnavailableCardNumber: _asNullableString(
+        json['card_payment_unavailable_card_number'] ??
+            json['card_payment_card_number'] ??
+            json['card_number'],
+      ) ??
+          extractedCardNumber,
     );
   }
 
@@ -114,6 +186,28 @@ class AppSettings {
     };
     return localized ?? cardPaymentInfoBody;
   }
+
+  String? cardPaymentUnavailableTitleForLocale(String languageCode) {
+    final code = languageCode.toLowerCase();
+    final localized = switch (code) {
+      'ru' => cardPaymentUnavailableTitleRu,
+      'uz' => cardPaymentUnavailableTitleUz,
+      'en' => cardPaymentUnavailableTitleEn,
+      _ => null,
+    };
+    return localized ?? cardPaymentUnavailableTitle;
+  }
+
+  String? cardPaymentUnavailableBodyForLocale(String languageCode) {
+    final code = languageCode.toLowerCase();
+    final localized = switch (code) {
+      'ru' => cardPaymentUnavailableBodyRu,
+      'uz' => cardPaymentUnavailableBodyUz,
+      'en' => cardPaymentUnavailableBodyEn,
+      _ => null,
+    };
+    return localized ?? cardPaymentUnavailableBody;
+  }
 }
 
 int _asInt(Object? value) => value is num ? value.toInt() : 0;
@@ -135,4 +229,20 @@ bool _asBool(Object? value, {required bool fallback}) {
   if (text == '1' || text == 'true' || text == 'yes') return true;
   if (text == '0' || text == 'false' || text == 'no') return false;
   return fallback;
+}
+
+String? _extractCardNumber(String? text) {
+  if (text == null) return null;
+  final trimmed = text.trim();
+  if (trimmed.isEmpty) return null;
+  final digitsOnly = trimmed.replaceAll(RegExp(r'[^0-9]'), '');
+  if (digitsOnly.length < 12) return null;
+  // Preserve spaces grouping if present; otherwise group by 4.
+  final hasSpaces = RegExp(r'\\s').hasMatch(trimmed);
+  if (hasSpaces) return trimmed;
+  final grouped = digitsOnly.replaceAllMapped(
+    RegExp(r'.{1,4}'),
+    (m) => '${m.group(0)} ',
+  ).trimRight();
+  return grouped;
 }

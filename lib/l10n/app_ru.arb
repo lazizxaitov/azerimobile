@@ -57,6 +57,8 @@
   "paymentMethod": "Способ оплаты",
   "payByCard": "Картой",
   "payByCash": "Наличными",
+  "copy": "Копировать",
+  "copied": "Скопировано",
   "youHaveBonuses": "У вас {count} бонусов",
   "@youHaveBonuses": {
     "placeholders": {

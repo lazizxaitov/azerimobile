@@ -182,6 +182,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get payByCash => 'Cash';
 
   @override
+  String get copy => 'Copy';
+
+  @override
+  String get copied => 'Copied';
+
+  @override
   String youHaveBonuses(Object count) {
     return 'You have $count bonus points';
   }

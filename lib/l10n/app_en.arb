@@ -57,6 +57,8 @@
   "paymentMethod": "Payment method",
   "payByCard": "Card",
   "payByCash": "Cash",
+  "copy": "Copy",
+  "copied": "Copied",
   "youHaveBonuses": "You have {count} bonus points",
   "@youHaveBonuses": {
     "placeholders": {

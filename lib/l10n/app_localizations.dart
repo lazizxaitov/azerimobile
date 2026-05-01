@@ -442,6 +442,18 @@ abstract class AppLocalizations {
   /// **'Наличными'**
   String get payByCash;
 
+  /// No description provided for @copy.
+  ///
+  /// In ru, this message translates to:
+  /// **'Копировать'**
+  String get copy;
+
+  /// No description provided for @copied.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скопировано'**
+  String get copied;
+
   /// No description provided for @youHaveBonuses.
   ///
   /// In ru, this message translates to:

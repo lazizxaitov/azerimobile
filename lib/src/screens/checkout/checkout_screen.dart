@@ -66,8 +66,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _selectPaymentMethod(PaymentMethod method) async {
-    if (method == PaymentMethod.card && !_isCardEnabled) return;
     if (method == PaymentMethod.cash && !_isCashEnabled) return;
+
+    if (method == PaymentMethod.card && !_isCardEnabled) {
+      await _showCardPaymentUnavailableDialog();
+      return;
+    }
 
     setState(() => _paymentMethod = method);
     if (!mounted) return;
@@ -87,9 +91,32 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  Future<void> _showCardPaymentUnavailableDialog() async {
+    final settings = AppStateScope.of(context).settings;
+    if (settings == null) return;
+    final localeCode = Localizations.localeOf(context).languageCode;
+    final title = settings.cardPaymentUnavailableTitleForLocale(localeCode);
+    final body = settings.cardPaymentUnavailableBodyForLocale(localeCode) ??
+        settings.cardPaymentInfoBodyForLocale(localeCode);
+    final cardNumber = settings.cardPaymentUnavailableCardNumber?.trim();
+    if ((title == null || title.trim().isEmpty) &&
+        (body == null || body.trim().isEmpty) &&
+        (cardNumber == null || cardNumber.isEmpty)) {
+      return;
+    }
+    await _showCardPaymentInfoDialog(
+      title: (title == null || title.trim().isEmpty)
+          ? AppLocalizations.of(context)!.payByCard
+          : title,
+      body: body,
+      cardNumber: cardNumber,
+    );
+  }
+
   Future<void> _showCardPaymentInfoDialog({
     required String? title,
     required String? body,
+    String? cardNumber,
   }) {
     final l10n = AppLocalizations.of(context)!;
     return showDialog<void>(
@@ -138,6 +165,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       fontWeight: FontWeight.w600,
                       color: Colors.black.withValues(alpha: 0.75),
                     ),
+                  ),
+                ],
+                if (cardNumber != null && cardNumber.trim().isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _CopyCardNumber(
+                    cardNumber: cardNumber.trim(),
+                    onCopied: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(l10n.copied),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    },
                   ),
                 ],
                 const SizedBox(height: 14),
@@ -269,6 +310,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             leftSelected: _paymentMethod == PaymentMethod.card,
                             leftEnabled: _isCardEnabled,
                             rightEnabled: _isCashEnabled,
+                            onLeftDisabledTap: _showCardPaymentUnavailableDialog,
                             onLeft: () => _selectPaymentMethod(
                               PaymentMethod.card,
                             ),
@@ -745,6 +787,7 @@ class _Segmented extends StatelessWidget {
     required this.leftSelected,
     this.leftEnabled = true,
     this.rightEnabled = true,
+    this.onLeftDisabledTap,
     required this.onLeft,
     required this.onRight,
   });
@@ -754,6 +797,7 @@ class _Segmented extends StatelessWidget {
   final bool leftSelected;
   final bool leftEnabled;
   final bool rightEnabled;
+  final VoidCallback? onLeftDisabledTap;
   final VoidCallback onLeft;
   final VoidCallback onRight;
 
@@ -773,7 +817,7 @@ class _Segmented extends StatelessWidget {
               label: leftLabel,
               selected: leftSelected,
               enabled: leftEnabled,
-              onTap: leftEnabled ? onLeft : null,
+              onTap: leftEnabled ? onLeft : onLeftDisabledTap,
             ),
           ),
           const SizedBox(width: 6),
@@ -1059,6 +1103,65 @@ class _MaxIntFormatter extends TextInputFormatter {
     return TextEditingValue(
       text: clamped,
       selection: TextSelection.collapsed(offset: clamped.length),
+    );
+  }
+}
+
+class _CopyCardNumber extends StatelessWidget {
+  const _CopyCardNumber({
+    required this.cardNumber,
+    required this.onCopied,
+  });
+
+  final String cardNumber;
+  final VoidCallback onCopied;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () async {
+          await Clipboard.setData(ClipboardData(text: cardNumber));
+          onCopied();
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  cardNumber,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                l10n.copy,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black.withValues(alpha: 0.75),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Icon(
+                Icons.copy_rounded,
+                size: 18,
+                color: Colors.black.withValues(alpha: 0.75),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

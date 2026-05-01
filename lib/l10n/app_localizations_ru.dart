@@ -182,6 +182,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get payByCash => 'Наличными';
 
   @override
+  String get copy => 'Копировать';
+
+  @override
+  String get copied => 'Скопировано';
+
+  @override
   String youHaveBonuses(Object count) {
     return 'У вас $count бонусов';
   }
