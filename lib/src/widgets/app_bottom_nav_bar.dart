@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:azeri/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -9,7 +11,7 @@ import 'brand_logo.dart';
 
 enum AppBottomTab { menu, profile }
 
-class AppBottomNavBar extends StatelessWidget {
+class AppBottomNavBar extends StatefulWidget {
   const AppBottomNavBar({
     super.key,
     required this.selectedTab,
@@ -24,21 +26,46 @@ class AppBottomNavBar extends StatelessWidget {
   final double gapWidth;
 
   @override
+  State<AppBottomNavBar> createState() => _AppBottomNavBarState();
+}
+
+class _AppBottomNavBarState extends State<AppBottomNavBar> {
+  bool _showAboutLabel = false;
+  Timer? _aboutTicker;
+
+  @override
+  void initState() {
+    super.initState();
+    _aboutTicker = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!mounted) return;
+      setState(() => _showAboutLabel = !_showAboutLabel);
+    });
+  }
+
+  @override
+  void dispose() {
+    _aboutTicker?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Container(
-        height: 78,
-        decoration: const BoxDecoration(
-          gradient: AppGradients.primary,
-          boxShadow: [
-            BoxShadow(
-              color: Color(0x1F000000),
-              blurRadius: 18,
-              offset: Offset(0, -6),
-            ),
-          ],
-        ),
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
+    final bottomGap = bottomInset > 0 ? 10.0 : 0.0;
+    return Container(
+      padding: EdgeInsets.only(bottom: (bottomInset - bottomGap).clamp(0.0, bottomInset)),
+      decoration: const BoxDecoration(
+        gradient: AppGradients.primary,
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x1F000000),
+            blurRadius: 18,
+            offset: Offset(0, -6),
+          ),
+        ],
+      ),
+      child: SizedBox(
+        height: 78 + bottomGap,
         child: Row(
           children: [
             Expanded(
@@ -46,29 +73,25 @@ class AppBottomNavBar extends StatelessWidget {
                 child: _BottomItem(
                   icon: Icons.home_outlined,
                   label: AppLocalizations.of(context)!.menuLabel,
-                  selected: selectedTab == AppBottomTab.menu,
-                  onTap: onMenuTap,
+                  selected: widget.selectedTab == AppBottomTab.menu,
+                  onTap: widget.onMenuTap,
                   assetPath: 'assets/icons/menu.svg',
                 ),
               ),
             ),
-            SizedBox(width: gapWidth),
-            InkWell(
-              borderRadius: BorderRadius.circular(12),
+            SizedBox(width: widget.gapWidth),
+            _AboutNavButton(
+              showLabel: _showAboutLabel,
               onTap: () => _showAboutDialog(context),
-              child: const Padding(
-                padding: EdgeInsets.all(4),
-                child: BrandLogo(height: 34),
-              ),
             ),
-            SizedBox(width: gapWidth),
+            SizedBox(width: widget.gapWidth),
             Expanded(
               child: Center(
                 child: _BottomItem(
                   icon: Icons.person_outline,
                   label: AppLocalizations.of(context)!.profileLabel,
-                  selected: selectedTab == AppBottomTab.profile,
-                  onTap: onProfileTap,
+                  selected: widget.selectedTab == AppBottomTab.profile,
+                  onTap: widget.onProfileTap,
                   assetPath: 'assets/icons/profile.svg',
                 ),
               ),
@@ -153,6 +176,72 @@ class AppBottomNavBar extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _AboutNavButton extends StatelessWidget {
+  const _AboutNavButton({
+    required this.showLabel,
+    required this.onTap,
+  });
+
+  final bool showLabel;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onTap,
+        child: AnimatedSize(
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.center,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 260),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) {
+              final fade = FadeTransition(opacity: animation, child: child);
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.12),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: fade,
+              );
+            },
+            child: showLabel
+                ? Container(
+                    key: const ValueKey('about_label'),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l10n.aboutButtonLabel,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.black.withValues(alpha: 0.82),
+                            letterSpacing: -0.1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : const Padding(
+                    key: ValueKey('about_logo'),
+                    padding: EdgeInsets.all(4),
+                    child: BrandLogo(height: 34),
+                  ),
+          ),
+        ),
+      ),
     );
   }
 }

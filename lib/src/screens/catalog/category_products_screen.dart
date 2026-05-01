@@ -59,6 +59,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
+        top: false,
         child: FutureBuilder<void>(
           future: _loadFuture,
           builder: (context, snapshot) {

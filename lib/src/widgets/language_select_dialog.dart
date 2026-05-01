@@ -86,14 +86,17 @@ class _LanguageSelectDialog extends StatelessWidget {
                     const SizedBox(height: 12),
                     _LanguageButton(
                       label: AppLocalizations.of(context)!.languageRussian,
-                      flag: const _FlagIcon.russia(),
                       onTap: () => onSelected('ru', context),
                     ),
                     const SizedBox(height: 10),
                     _LanguageButton(
                       label: AppLocalizations.of(context)!.languageUzbek,
-                      flag: const _FlagIcon.uzbekistan(),
                       onTap: () => onSelected('uz', context),
+                    ),
+                    const SizedBox(height: 10),
+                    _LanguageButton(
+                      label: AppLocalizations.of(context)!.languageEnglish,
+                      onTap: () => onSelected('en', context),
                     ),
                   ],
                 ),
@@ -110,12 +113,10 @@ class _LanguageButton extends StatelessWidget {
   const _LanguageButton({
     required this.label,
     required this.onTap,
-    required this.flag,
   });
 
   final String label;
   final VoidCallback onTap;
-  final Widget flag;
 
   @override
   Widget build(BuildContext context) {
@@ -136,58 +137,8 @@ class _LanguageButton extends StatelessWidget {
           ),
         ),
         onPressed: onTap,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            flag,
-            const SizedBox(width: 10),
-            Text(label),
-          ],
-        ),
+        child: Text(label),
       ),
     );
   }
 }
-
-class _FlagIcon extends StatelessWidget {
-  const _FlagIcon.russia() : _type = _FlagType.russia;
-  const _FlagIcon.uzbekistan() : _type = _FlagType.uzbekistan;
-
-  final _FlagType _type;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 28,
-      height: 20,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: const Color(0x33000000)),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(3),
-          child: _type == _FlagType.russia
-              ? Column(
-                  children: const [
-                    Expanded(child: ColoredBox(color: Colors.white)),
-                    Expanded(child: ColoredBox(color: Color(0xFF1C57A5))),
-                    Expanded(child: ColoredBox(color: Color(0xFFD32F2F))),
-                  ],
-                )
-              : Column(
-                  children: const [
-                    Expanded(child: ColoredBox(color: Color(0xFF1E91D6))),
-                    SizedBox(height: 2, child: ColoredBox(color: Color(0xFFD32F2F))),
-                    Expanded(child: ColoredBox(color: Colors.white)),
-                    SizedBox(height: 2, child: ColoredBox(color: Color(0xFFD32F2F))),
-                    Expanded(child: ColoredBox(color: Color(0xFF2E7D32))),
-                  ],
-                ),
-        ),
-      ),
-    );
-  }
-}
-
-enum _FlagType { russia, uzbekistan }

@@ -45,6 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
             AppTopBar(title: l10n.settingsTitle, showCartButton: false),
@@ -81,16 +82,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           const SizedBox(height: 12),
                           _LanguageOption(
                             label: l10n.languageRussian,
-                            flag: const _FlagIcon.russia(),
                             selected: _language == 'ru',
                             onTap: () => _selectLanguage('ru'),
                           ),
                           const SizedBox(height: 10),
                           _LanguageOption(
                             label: l10n.languageUzbek,
-                            flag: const _FlagIcon.uzbekistan(),
                             selected: _language == 'uz',
                             onTap: () => _selectLanguage('uz'),
+                          ),
+                          const SizedBox(height: 10),
+                          _LanguageOption(
+                            label: l10n.languageEnglish,
+                            selected: _language == 'en',
+                            onTap: () => _selectLanguage('en'),
                           ),
                         ],
                       ),
@@ -117,13 +122,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 class _LanguageOption extends StatelessWidget {
   const _LanguageOption({
     required this.label,
-    required this.flag,
     required this.selected,
     required this.onTap,
   });
 
   final String label;
-  final Widget flag;
   final bool selected;
   final VoidCallback onTap;
 
@@ -145,8 +148,6 @@ class _LanguageOption extends StatelessWidget {
         ),
         child: Row(
           children: [
-            flag,
-            const SizedBox(width: 10),
             Icon(
               selected ? Icons.radio_button_checked : Icons.radio_button_off,
               color: selected ? Colors.black : Colors.black54,
@@ -167,46 +168,3 @@ class _LanguageOption extends StatelessWidget {
     );
   }
 }
-
-class _FlagIcon extends StatelessWidget {
-  const _FlagIcon.russia() : _type = _FlagType.russia;
-  const _FlagIcon.uzbekistan() : _type = _FlagType.uzbekistan;
-
-  final _FlagType _type;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 28,
-      height: 20,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: const Color(0x33000000)),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(3),
-          child: _type == _FlagType.russia
-              ? Column(
-                  children: const [
-                    Expanded(child: ColoredBox(color: Colors.white)),
-                    Expanded(child: ColoredBox(color: Color(0xFF1C57A5))),
-                    Expanded(child: ColoredBox(color: Color(0xFFD32F2F))),
-                  ],
-                )
-              : Column(
-                  children: const [
-                    Expanded(child: ColoredBox(color: Color(0xFF1E91D6))),
-                    SizedBox(height: 2, child: ColoredBox(color: Color(0xFFD32F2F))),
-                    Expanded(child: ColoredBox(color: Colors.white)),
-                    SizedBox(height: 2, child: ColoredBox(color: Color(0xFFD32F2F))),
-                    Expanded(child: ColoredBox(color: Color(0xFF2E7D32))),
-                  ],
-                ),
-        ),
-      ),
-    );
-  }
-}
-
-enum _FlagType { russia, uzbekistan }

@@ -27,6 +27,7 @@ class _AddressMapPickerState extends State<AddressMapPicker> {
   YandexMapController? _controller;
   Timer? _debounce;
   bool _userLayerEnabled = false;
+  bool _isRequestingPermission = false;
 
   @override
   void dispose() {
@@ -110,9 +111,11 @@ class _AddressMapPickerState extends State<AddressMapPicker> {
   void _scheduleReverseGeocode(Point point) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 450), () async {
-      final lang = widget.languageCode.toLowerCase() == 'uz'
-          ? 'uz_UZ'
-          : 'ru_RU';
+      final lang = switch (widget.languageCode.toLowerCase()) {
+        'uz' => 'uz_UZ',
+        'en' => 'en_US',
+        _ => 'ru_RU',
+      };
       final text = await _geocoder.reverseGeocode(
         latitude: point.latitude,
         longitude: point.longitude,
@@ -126,10 +129,13 @@ class _AddressMapPickerState extends State<AddressMapPicker> {
     });
   }
 
-  Future<void> _enableUserLayer() async {
-    if (_controller == null || _userLayerEnabled) return;
-    final allowed = await _ensureLocationPermission();
-    if (!allowed) return;
+  Future<bool> _enableUserLayer({bool requestIfNeeded = false}) async {
+    if (_controller == null) return false;
+    if (_userLayerEnabled) return true;
+    final allowed = await _ensureLocationPermission(
+      requestIfNeeded: requestIfNeeded,
+    );
+    if (!allowed) return false;
     _userLayerEnabled = true;
     try {
       await _controller!.toggleUserLayer(
@@ -138,13 +144,20 @@ class _AddressMapPickerState extends State<AddressMapPicker> {
         autoZoomEnabled: false,
       );
     } catch (_) {}
+    return true;
   }
 
   Future<void> _centerOnUser() async {
     if (_controller == null) return;
-    await _enableUserLayer();
+    final enabled = await _enableUserLayer(requestIfNeeded: true);
+    if (!enabled) return;
+    await Future<void>.delayed(const Duration(milliseconds: 200));
     try {
-      final position = await _controller!.getUserCameraPosition();
+      var position = await _controller!.getUserCameraPosition();
+      if (position == null) {
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+        position = await _controller!.getUserCameraPosition();
+      }
       if (position == null) return;
       await _controller!.moveCamera(
         CameraUpdate.newCameraPosition(
@@ -154,11 +167,15 @@ class _AddressMapPickerState extends State<AddressMapPicker> {
     } catch (_) {}
   }
 
-  Future<bool> _ensureLocationPermission() async {
+  Future<bool> _ensureLocationPermission({required bool requestIfNeeded}) async {
     if (kIsWeb) return false;
     final status = await Permission.locationWhenInUse.status;
     if (status.isGranted) return true;
+    if (!requestIfNeeded || _isRequestingPermission) return false;
+    _isRequestingPermission = true;
     final result = await Permission.locationWhenInUse.request();
-    return result.isGranted;
+    _isRequestingPermission = false;
+    if (result.isGranted) return true;
+    return false;
   }
 }

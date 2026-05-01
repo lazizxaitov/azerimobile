@@ -24,6 +24,7 @@ class AppTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final topInset = MediaQuery.paddingOf(context).top;
     final resolvedTitleStyle = titleStyle ??
         Theme.of(context).textTheme.titleLarge?.copyWith(
               fontFamily: 'Montserrat',
@@ -40,7 +41,7 @@ class AppTopBar extends StatelessWidget {
 
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(24, 18, 24, 12),
+      padding: EdgeInsets.fromLTRB(24, 18 + topInset, 24, 12),
       child: Row(
         children: [
           if (showBackButton)
@@ -86,4 +87,3 @@ class AppTopBar extends StatelessWidget {
     );
   }
 }
-

@@ -52,6 +52,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
             AppTopBar(

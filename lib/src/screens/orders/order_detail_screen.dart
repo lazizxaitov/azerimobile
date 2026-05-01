@@ -42,6 +42,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       return Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(
+          top: false,
           child: Column(
             children: [
               AppTopBar(title: l10n.orderDetailsTitle, showCartButton: false),
@@ -65,6 +66,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
             AppTopBar(

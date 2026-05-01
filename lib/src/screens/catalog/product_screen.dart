@@ -79,6 +79,7 @@ class _ProductScreenState extends State<ProductScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
+        top: false,
         child: Stack(
           children: [
             Column(

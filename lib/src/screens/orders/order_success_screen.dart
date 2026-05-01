@@ -13,6 +13,7 @@ class OrderSuccessScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F7F3),
       body: SafeArea(
+        top: false,
         child: Center(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),

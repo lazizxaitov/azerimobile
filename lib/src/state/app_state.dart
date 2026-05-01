@@ -40,16 +40,16 @@ class CartItemMeta {
   final String? subtitle;
 
   String titleForLocale(String languageCode) {
-    if (languageCode.toLowerCase() == 'uz') {
-      return titleUz?.trim().isNotEmpty == true ? titleUz! : title;
-    }
-    return titleRu?.trim().isNotEmpty == true ? titleRu! : title;
+    return switch (languageCode.toLowerCase()) {
+      'uz' => titleUz?.trim().isNotEmpty == true ? titleUz! : title,
+      'ru' => titleRu?.trim().isNotEmpty == true ? titleRu! : title,
+      _ => title,
+    };
   }
 }
 
 class AppState extends ChangeNotifier {
   bool _hasUnreadNotifications = false;
-  DateTime? _notificationsClearedAt;
   bool _isAuthorized = false;
   Locale? _locale;
   final ApiRepository _api = ApiRepository();
@@ -148,7 +148,6 @@ class AppState extends ChangeNotifier {
         _api.fetchProducts(),
         _api.fetchTopProducts(),
         _api.fetchSettings(),
-        _api.fetchNotifications(),
         _api.fetchPickupPoints(),
       ]);
       _banners = results[0] as List<BannerItem>;
@@ -156,12 +155,7 @@ class AppState extends ChangeNotifier {
       _products = results[2] as List<api.ProductItem>;
       _topProducts = results[3] as List<TopProductItem>;
       _settings = results[4] as AppSettings;
-      _notifications = _filterNotifications(
-        results[5] as List<NotificationItem>,
-      );
-      _hasUnreadNotifications =
-          _notifications.any((n) => n.isRead == false);
-      _pickupPoints = results[6] as List<PickupPoint>;
+      _pickupPoints = results[5] as List<PickupPoint>;
       await _persistInitialCache();
     } catch (e) {
       _initialLoadError = e.toString();
@@ -182,7 +176,6 @@ class AppState extends ChangeNotifier {
         _api.fetchProducts(),
         _api.fetchTopProducts(),
         _api.fetchSettings(),
-        _api.fetchNotifications(),
         _api.fetchPickupPoints(),
       ]);
       _banners = results[0] as List<BannerItem>;
@@ -190,12 +183,7 @@ class AppState extends ChangeNotifier {
       _products = results[2] as List<api.ProductItem>;
       _topProducts = results[3] as List<TopProductItem>;
       _settings = results[4] as AppSettings;
-      _notifications = _filterNotifications(
-        results[5] as List<NotificationItem>,
-      );
-      _hasUnreadNotifications =
-          _notifications.any((n) => n.isRead == false);
-      _pickupPoints = results[6] as List<PickupPoint>;
+      _pickupPoints = results[5] as List<PickupPoint>;
       await _persistInitialCache();
       notifyListeners();
     } catch (e) {
@@ -206,13 +194,8 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> refreshNotifications() async {
-    try {
-      final items = await _api.fetchNotifications();
-      _notifications = _filterNotifications(items);
-      _hasUnreadNotifications =
-          _notifications.any((n) => n.isRead == false);
-      notifyListeners();
-    } catch (_) {}
+    await _restoreLocalNotifications();
+    notifyListeners();
   }
 
   Future<void> refreshPickupPoints() async {
@@ -350,10 +333,47 @@ class AppState extends ChangeNotifier {
 
   void markAllNotificationsRead() {
     if (_notifications.isEmpty) return;
-    _notifications = const [];
-    _notificationsClearedAt = DateTime.now();
-    AppPreferences.setNotificationsClearedAt(_notificationsClearedAt);
-    setHasUnreadNotifications(false);
+    _notifications = _notifications
+        .map(
+          (n) => NotificationItem(
+            id: n.id,
+            titleRu: n.titleRu,
+            titleUz: n.titleUz,
+            bodyRu: n.bodyRu,
+            bodyUz: n.bodyUz,
+            imageUrl: n.imageUrl,
+            isRead: true,
+            createdAt: n.createdAt,
+          ),
+        )
+        .toList(growable: false);
+    _hasUnreadNotifications = false;
+    notifyListeners();
+    _persistLocalNotifications();
+  }
+
+  Future<void> addLocalNotification({
+    required String titleRu,
+    required String titleUz,
+    required String bodyRu,
+    required String bodyUz,
+    String? imageUrl,
+  }) async {
+    final now = DateTime.now();
+    final item = NotificationItem(
+      id: now.millisecondsSinceEpoch,
+      titleRu: titleRu,
+      titleUz: titleUz,
+      bodyRu: bodyRu,
+      bodyUz: bodyUz,
+      imageUrl: imageUrl,
+      isRead: false,
+      createdAt: now,
+    );
+    _notifications = [item, ..._notifications];
+    _hasUnreadNotifications = true;
+    notifyListeners();
+    await _persistLocalNotifications();
   }
 
   Future<List<api.ProductItem>> loadCategoryProducts(int categoryId) async {
@@ -376,18 +396,6 @@ class AppState extends ChangeNotifier {
 
   List<api.ProductItem> categoryProducts(int categoryId) {
     return _categoryProductsCache[categoryId] ?? const [];
-  }
-
-  List<NotificationItem> _filterNotifications(
-    List<NotificationItem> items,
-  ) {
-    final clearedAt = _notificationsClearedAt;
-    if (clearedAt == null) return items;
-    return items.where((item) {
-      final createdAt = item.createdAt;
-      if (createdAt == null) return true;
-      return createdAt.isAfter(clearedAt);
-    }).toList(growable: false);
   }
 
   List<api.ProductItem> topProducts() {
@@ -507,7 +515,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _restoreInitialCache() async {
-    _notificationsClearedAt = await AppPreferences.getNotificationsClearedAt();
+    await _restoreLocalNotifications();
     final raw = await AppPreferences.getInitialCache();
     if (raw == null || raw.isEmpty) return;
     try {
@@ -518,7 +526,6 @@ class AppState extends ChangeNotifier {
       final products = json['products'];
       final topProducts = json['topProducts'];
       final settings = json['settings'];
-      final notifications = json['notifications'];
       final pickupPoints = json['pickupPoints'];
       _banners = _decodeList(banners, BannerItem.fromJson);
       _categories = _decodeList(categories, CategoryItem.fromJson);
@@ -527,9 +534,6 @@ class AppState extends ChangeNotifier {
       if (settings is Map<String, dynamic>) {
         _settings = AppSettings.fromJson(settings);
       }
-      _notifications = _filterNotifications(
-        _decodeList(notifications, NotificationItem.fromJson),
-      );
       _pickupPoints = _decodeList(pickupPoints, PickupPoint.fromJson);
       notifyListeners();
     } catch (_) {}
@@ -544,8 +548,6 @@ class AppState extends ChangeNotifier {
       'topProducts':
           _topProducts.map(_topProductToJson).toList(growable: false),
       'settings': _settings == null ? null : _settingsToJson(_settings!),
-      'notifications':
-          _notifications.map(_notificationToJson).toList(growable: false),
       'pickupPoints':
           _pickupPoints.map(_pickupPointToJson).toList(growable: false),
     });
@@ -729,6 +731,16 @@ class AppState extends ChangeNotifier {
         'bonus_redeem_amount': settings.bonusRedeemAmount,
         'instagram': settings.instagram,
         'telegram': settings.telegram,
+        'payment_card_enabled': settings.paymentCardEnabled ? 1 : 0,
+        'payment_cash_enabled': settings.paymentCashEnabled ? 1 : 0,
+        'card_payment_info_title': settings.cardPaymentInfoTitle,
+        'card_payment_info_body': settings.cardPaymentInfoBody,
+        'card_payment_info_title_ru': settings.cardPaymentInfoTitleRu,
+        'card_payment_info_title_uz': settings.cardPaymentInfoTitleUz,
+        'card_payment_info_title_en': settings.cardPaymentInfoTitleEn,
+        'card_payment_info_body_ru': settings.cardPaymentInfoBodyRu,
+        'card_payment_info_body_uz': settings.cardPaymentInfoBodyUz,
+        'card_payment_info_body_en': settings.cardPaymentInfoBodyEn,
       };
 
   Map<String, dynamic> _notificationToJson(NotificationItem item) => {
@@ -741,6 +753,32 @@ class AppState extends ChangeNotifier {
         'created_at': item.createdAt?.toIso8601String(),
         'is_read': item.isRead ? 1 : 0,
       };
+
+  Future<void> _restoreLocalNotifications() async {
+    final raw = await AppPreferences.getLocalNotifications();
+    if (raw == null || raw.isEmpty) {
+      _notifications = const [];
+      _hasUnreadNotifications = false;
+      return;
+    }
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return;
+      _notifications = decoded
+          .whereType<Map<String, dynamic>>()
+          .map(NotificationItem.fromJson)
+          .toList(growable: false);
+      _hasUnreadNotifications =
+          _notifications.any((n) => n.isRead == false);
+    } catch (_) {}
+  }
+
+  Future<void> _persistLocalNotifications() async {
+    final payload = jsonEncode(
+      _notifications.map(_notificationToJson).toList(growable: false),
+    );
+    await AppPreferences.setLocalNotifications(payload);
+  }
 
   Map<String, dynamic> _pickupPointToJson(PickupPoint item) => {
         'id': item.id,

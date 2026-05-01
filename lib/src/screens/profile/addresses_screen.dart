@@ -56,6 +56,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
             AppTopBar(

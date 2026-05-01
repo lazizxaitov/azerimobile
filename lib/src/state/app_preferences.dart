@@ -9,6 +9,7 @@ final class AppPreferences {
   static const _cacheInitialKey = 'cache_initial_v1';
   static const _cacheCustomerKey = 'cache_customer_v1';
   static const _notificationsClearedAtKey = 'notifications_cleared_at';
+  static const _localNotificationsKey = 'local_notifications_v1';
 
   static Future<String?> getLanguage() async {
     final prefs = await SharedPreferences.getInstance();
@@ -78,5 +79,15 @@ final class AppPreferences {
     } else {
       await prefs.setInt(_notificationsClearedAtKey, value.millisecondsSinceEpoch);
     }
+  }
+
+  static Future<String?> getLocalNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_localNotificationsKey);
+  }
+
+  static Future<void> setLocalNotifications(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_localNotificationsKey, value);
   }
 }

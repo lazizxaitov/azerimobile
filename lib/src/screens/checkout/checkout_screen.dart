@@ -38,6 +38,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String? _orderComment;
   bool _isSubmitting = false;
 
+  bool get _isCardEnabled =>
+      AppStateScope.of(context).settings?.paymentCardEnabled ?? true;
+
+  bool get _isCashEnabled =>
+      AppStateScope.of(context).settings?.paymentCashEnabled ?? true;
+
   @override
   void dispose() {
     _bonusController.dispose();
@@ -45,11 +51,132 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     super.dispose();
   }
 
+  void _ensurePaymentMethodAllowed() {
+    if (_paymentMethod == PaymentMethod.card && !_isCardEnabled) {
+      if (_isCashEnabled) {
+        setState(() => _paymentMethod = PaymentMethod.cash);
+      }
+      return;
+    }
+    if (_paymentMethod == PaymentMethod.cash && !_isCashEnabled) {
+      if (_isCardEnabled) {
+        setState(() => _paymentMethod = PaymentMethod.card);
+      }
+    }
+  }
+
+  Future<void> _selectPaymentMethod(PaymentMethod method) async {
+    if (method == PaymentMethod.card && !_isCardEnabled) return;
+    if (method == PaymentMethod.cash && !_isCashEnabled) return;
+
+    setState(() => _paymentMethod = method);
+    if (!mounted) return;
+    if (method != PaymentMethod.card) return;
+
+    final settings = AppStateScope.of(context).settings;
+    if (settings == null) return;
+    final localeCode = Localizations.localeOf(context).languageCode;
+    final title = settings.cardPaymentInfoTitleForLocale(localeCode);
+    final body = settings.cardPaymentInfoBodyForLocale(localeCode);
+    if ((title == null || title.isEmpty) && (body == null || body.isEmpty)) {
+      return;
+    }
+    await _showCardPaymentInfoDialog(
+      title: title,
+      body: body,
+    );
+  }
+
+  Future<void> _showCardPaymentInfoDialog({
+    required String? title,
+    required String? body,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: AppGradients.primary,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x1A000000),
+                  blurRadius: 20,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  (title == null || title.trim().isEmpty)
+                      ? l10n.payByCard
+                      : title.trim(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
+                  ),
+                ),
+                if (body != null && body.trim().isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    body.trim(),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black.withValues(alpha: 0.75),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 14),
+                SizedBox(
+                  height: 46,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: Text(l10n.close),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     const pageBg = Color(0xFFF8F7F3);
     final l10n = AppLocalizations.of(context)!;
     final state = AppStateScope.of(context);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _ensurePaymentMethodAllowed();
+    });
 
     final subtotal = state.cartQuantities.entries.fold<int>(0, (sum, e) {
       final meta = state.cartMeta[e.key];
@@ -79,6 +206,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
             AppTopBar(
@@ -139,11 +267,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             leftLabel: l10n.payByCard,
                             rightLabel: l10n.payByCash,
                             leftSelected: _paymentMethod == PaymentMethod.card,
-                            onLeft: () => setState(
-                              () => _paymentMethod = PaymentMethod.card,
+                            leftEnabled: _isCardEnabled,
+                            rightEnabled: _isCashEnabled,
+                            onLeft: () => _selectPaymentMethod(
+                              PaymentMethod.card,
                             ),
-                            onRight: () => setState(
-                              () => _paymentMethod = PaymentMethod.cash,
+                            onRight: () => _selectPaymentMethod(
+                              PaymentMethod.cash,
                             ),
                           ),
                           const SizedBox(height: 14),
@@ -613,6 +743,8 @@ class _Segmented extends StatelessWidget {
     required this.leftLabel,
     required this.rightLabel,
     required this.leftSelected,
+    this.leftEnabled = true,
+    this.rightEnabled = true,
     required this.onLeft,
     required this.onRight,
   });
@@ -620,6 +752,8 @@ class _Segmented extends StatelessWidget {
   final String leftLabel;
   final String rightLabel;
   final bool leftSelected;
+  final bool leftEnabled;
+  final bool rightEnabled;
   final VoidCallback onLeft;
   final VoidCallback onRight;
 
@@ -638,7 +772,8 @@ class _Segmented extends StatelessWidget {
             child: _Segment(
               label: leftLabel,
               selected: leftSelected,
-              onTap: onLeft,
+              enabled: leftEnabled,
+              onTap: leftEnabled ? onLeft : null,
             ),
           ),
           const SizedBox(width: 6),
@@ -646,7 +781,8 @@ class _Segmented extends StatelessWidget {
             child: _Segment(
               label: rightLabel,
               selected: !leftSelected,
-              onTap: onRight,
+              enabled: rightEnabled,
+              onTap: rightEnabled ? onRight : null,
             ),
           ),
         ],
@@ -659,28 +795,35 @@ class _Segment extends StatelessWidget {
   const _Segment({
     required this.label,
     required this.selected,
+    required this.enabled,
     required this.onTap,
   });
 
   final String label;
   final bool selected;
-  final VoidCallback onTap;
+  final bool enabled;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final isActive = enabled;
+    final resolvedSelected = selected && isActive;
     return Material(
-      color: selected ? const Color(0xFFCFB07A) : Colors.transparent,
+      color: resolvedSelected ? const Color(0xFFCFB07A) : Colors.transparent,
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
         borderRadius: BorderRadius.circular(10),
         onTap: onTap,
         child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: selected ? Colors.white : Colors.black,
+          child: Opacity(
+            opacity: isActive ? 1.0 : 0.42,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: resolvedSelected ? Colors.white : Colors.black,
+              ),
             ),
           ),
         ),

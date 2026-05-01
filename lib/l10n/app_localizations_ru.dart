@@ -301,6 +301,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get languageUzbek => 'Oʻzbekcha';
 
   @override
+  String get languageEnglish => 'Английский';
+
+  @override
   String get changePassword => 'Изменить пароль';
 
   @override
@@ -383,6 +386,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get selectLanguage => 'Выберите язык';
+
+  @override
+  String get aboutButtonLabel => 'О нас';
 
   @override
   String get aboutTitle => 'О нас';
