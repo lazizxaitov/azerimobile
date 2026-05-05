@@ -231,11 +231,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ? settingsDelivery
         : 0;
     final bonusAvailable = state.bonusBalanceValue;
-    final bonusLimit = _effectiveBonusLimit(bonusAvailable);
     final bonusError = _useBonus ? _bonusValidationError(bonusAvailable) : null;
     final bonusDiscount =
         (_useBonus && bonusError == null)
-            ? _bonusToUseFor(subtotal, bonusAvailable, bonusLimit)
+            ? _bonusToUseFor(subtotal, bonusAvailable)
             : 0;
     final total = subtotal + deliveryFee - bonusDiscount;
     final currency = state.currencySymbol.isNotEmpty
@@ -452,23 +451,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return null;
   }
 
-  int _bonusToUseFor(int subtotal, int balance, int limit) {
+  int _bonusToUseFor(int subtotal, int balance) {
     final raw = int.tryParse(_bonusController.text.replaceAll(' ', '')) ?? 0;
     final nonNegative = raw < 0 ? 0 : raw;
     final clampedToBalance = nonNegative > balance
         ? balance
         : nonNegative;
-    final clampedToLimit =
-        clampedToBalance > limit ? limit : clampedToBalance;
-    return clampedToLimit > subtotal ? subtotal : clampedToLimit;
-  }
-
-  int _effectiveBonusLimit(int bonusAvailable) {
-    final settingsLimit = AppStateScope.of(context).settings?.bonusRedeemAmount;
-    if (settingsLimit == null || settingsLimit <= 0) {
-      return bonusAvailable;
-    }
-    return settingsLimit > bonusAvailable ? bonusAvailable : settingsLimit;
+    return clampedToBalance > subtotal ? subtotal : clampedToBalance;
   }
 
   Future<void> _submitOrder() async {
@@ -480,7 +469,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return sum + e.value * unitPrice;
     });
     final bonusAvailable = state.bonusBalanceValue;
-    final bonusLimit = _effectiveBonusLimit(bonusAvailable);
     final bonusError = _useBonus ? _bonusValidationError(bonusAvailable) : null;
     if (_useBonus && bonusError != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -489,7 +477,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return;
     }
     final bonusDiscount =
-        _useBonus ? _bonusToUseFor(subtotal, bonusAvailable, bonusLimit) : 0;
+        _useBonus ? _bonusToUseFor(subtotal, bonusAvailable) : 0;
     final items = state.cartQuantities.entries
         .map((entry) {
           final meta = state.cartMeta[entry.key];
