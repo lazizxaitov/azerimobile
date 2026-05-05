@@ -1,8 +1,5 @@
 import Flutter
 import UIKit
-#if canImport(YandexMapsMobile)
-import YandexMapsMobile
-#endif
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -10,14 +7,15 @@ import YandexMapsMobile
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    #if canImport(YandexMapsMobile)
     if let key = Bundle.main.object(forInfoDictionaryKey: "YandexMapsApiKey") as? String,
        key.isEmpty == false {
-      YMKMapKit.setApiKey(key)
+      // Avoid a hard dependency on the YandexMapsMobile Swift module; call via ObjC runtime.
+      if let mapKit = NSClassFromString("YMKMapKit") as? NSObject.Type {
+        _ = mapKit.perform(NSSelectorFromString("setApiKey:"), with: key)
+      }
     } else {
       NSLog("YandexMapsApiKey is missing/empty. Set it in Info.plist before using Yandex MapKit.")
     }
-    #endif
     GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
