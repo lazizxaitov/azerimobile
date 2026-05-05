@@ -541,35 +541,30 @@ class _ProfileCard extends StatelessWidget {
               color: Colors.black.withValues(alpha: 0.8),
             ),
           ),
-          const SizedBox(height: 12),
-          Material(
-            color: Colors.white.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(14),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.birthDateLabel,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.black.withValues(alpha: 0.75),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    (date == null) ? '—' : _formatBirthDateUi(date),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Text(
+                '${AppLocalizations.of(context)!.birthDateLabel}: ',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black.withValues(alpha: 0.8),
+                ),
               ),
-            ),
+              Expanded(
+                child: Text(
+                  (date == null) ? '—' : _formatBirthDateUi(date),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
