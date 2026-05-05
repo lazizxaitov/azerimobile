@@ -51,6 +51,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nameHint => 'Full name';
 
   @override
+  String get birthDateLabel => 'Date of birth';
+
+  @override
+  String get birthDateHint => 'Date of birth (YYYY-MM-DD)';
+
+  @override
   String get createAccount => 'Create account';
 
   @override

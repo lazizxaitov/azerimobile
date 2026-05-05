@@ -14,6 +14,8 @@
   "registerTitle": "Sign up",
   "registerSubtitle": "Create your account",
   "nameHint": "Full name",
+  "birthDateLabel": "Date of birth",
+  "birthDateHint": "Date of birth (YYYY-MM-DD)",
   "createAccount": "Create account",
   "alreadyHaveAccount": "Already have an account?",
   "cartTitle": "Cart",

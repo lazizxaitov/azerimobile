@@ -4,12 +4,14 @@ class Customer {
     required this.name,
     required this.phone,
     required this.password,
+    required this.birthDate,
   });
 
   final int id;
   final String name;
   final String phone;
   final String password;
+  final String? birthDate; // YYYY-MM-DD
 
   factory Customer.fromRegistrationResponse(
     CustomerRegistration payload,
@@ -20,6 +22,7 @@ class Customer {
       name: payload.name,
       phone: payload.phone,
       password: payload.password,
+      birthDate: payload.birthDate,
     );
   }
 
@@ -29,6 +32,7 @@ class Customer {
       name: _asString(json['name']),
       phone: _asString(json['phone']),
       password: '',
+      birthDate: _asNullableString(json['birthDate'] ?? json['birth_date']),
     );
   }
 
@@ -37,7 +41,7 @@ class Customer {
     if (item is Map<String, dynamic>) {
       return Customer.fromProfileJson(item);
     }
-    return Customer(id: 0, name: '', phone: '', password: '');
+    return Customer(id: 0, name: '', phone: '', password: '', birthDate: null);
   }
 }
 
@@ -46,19 +50,28 @@ class CustomerRegistration {
     required this.name,
     required this.phone,
     required this.password,
+    required this.birthDate,
   });
 
   final String name;
   final String phone;
   final String password;
+  final String birthDate; // YYYY-MM-DD
 
   Map<String, dynamic> toJson() => <String, dynamic>{
         'name': name,
         'phone': phone,
         'password': password,
+        'birthDate': birthDate,
       };
 }
 
 int _asInt(Object? value) => value is num ? value.toInt() : 0;
 
 String _asString(Object? value) => value?.toString() ?? '';
+
+String? _asNullableString(Object? value) {
+  final text = value?.toString();
+  if (text == null || text.trim().isEmpty) return null;
+  return text;
+}

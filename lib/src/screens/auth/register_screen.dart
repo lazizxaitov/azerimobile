@@ -21,6 +21,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _phoneController = TextEditingController(text: '+998 ');
   final _nameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _birthDateController = TextEditingController();
   bool _isSubmitting = false;
 
   @override
@@ -45,6 +46,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 phoneController: _phoneController,
                 nameController: _nameController,
                 passwordController: _passwordController,
+                birthDateController: _birthDateController,
+                onPickBirthDate: _pickBirthDate,
                 onTogglePassword: () => setState(
                   () => _obscurePassword = !_obscurePassword,
                 ),
@@ -63,20 +66,58 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _phoneController.dispose();
     _nameController.dispose();
     _passwordController.dispose();
+    _birthDateController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickBirthDate() async {
+    final now = DateTime.now();
+    final initial = _parseBirthDate(_birthDateController.text) ??
+        DateTime(now.year - 18, now.month, now.day);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(1900, 1, 1),
+      lastDate: DateTime(now.year, now.month, now.day),
+      helpText: AppLocalizations.of(context)!.birthDateLabel,
+    );
+    if (!mounted || picked == null) return;
+    _birthDateController.text = _formatBirthDate(picked);
+  }
+
+  DateTime? _parseBirthDate(String text) {
+    final trimmed = text.trim();
+    final m = RegExp(r'^(\\d{4})-(\\d{2})-(\\d{2})$').firstMatch(trimmed);
+    if (m == null) return null;
+    final y = int.tryParse(m.group(1)!);
+    final mo = int.tryParse(m.group(2)!);
+    final d = int.tryParse(m.group(3)!);
+    if (y == null || mo == null || d == null) return null;
+    return DateTime(y, mo, d);
+  }
+
+  String _formatBirthDate(DateTime date) {
+    final y = date.year.toString().padLeft(4, '0');
+    final m = date.month.toString().padLeft(2, '0');
+    final d = date.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
   }
 
   Future<void> _submit() async {
     final name = _nameController.text.trim();
     final phone = _phoneController.text.trim();
     final password = _passwordController.text.trim();
-    if (name.isEmpty || phone.isEmpty || password.isEmpty) return;
+    final birthDate = _birthDateController.text.trim();
+    if (name.isEmpty || phone.isEmpty || password.isEmpty || birthDate.isEmpty) {
+      return;
+    }
     setState(() => _isSubmitting = true);
     try {
       final customer = await AppStateScope.of(context).registerCustomer(
         name: name,
         phone: phone,
         password: password,
+        birthDate: birthDate,
       );
       await AppPreferences.setAuthorized(true);
       await AppPreferences.setCustomerId(customer.id);
@@ -98,6 +139,8 @@ class _RegisterCard extends StatelessWidget {
     required this.phoneController,
     required this.nameController,
     required this.passwordController,
+    required this.birthDateController,
+    required this.onPickBirthDate,
     required this.onTogglePassword,
     required this.onSubmit,
     required this.isSubmitting,
@@ -107,6 +150,8 @@ class _RegisterCard extends StatelessWidget {
   final TextEditingController phoneController;
   final TextEditingController nameController;
   final TextEditingController passwordController;
+  final TextEditingController birthDateController;
+  final VoidCallback onPickBirthDate;
   final VoidCallback onTogglePassword;
   final VoidCallback onSubmit;
   final bool isSubmitting;
@@ -156,6 +201,17 @@ class _RegisterCard extends StatelessWidget {
             keyboardType: TextInputType.phone,
             controller: phoneController,
             inputFormatters: [UzbekPhoneInputFormatter()],
+          ),
+          const SizedBox(height: 12),
+          OutlinedTextField(
+            hintText: l10n.birthDateHint,
+            controller: birthDateController,
+            readOnly: true,
+            onTap: onPickBirthDate,
+            suffixIcon: IconButton(
+              onPressed: onPickBirthDate,
+              icon: const Icon(Icons.calendar_month_outlined),
+            ),
           ),
           const SizedBox(height: 12),
           OutlinedTextField(

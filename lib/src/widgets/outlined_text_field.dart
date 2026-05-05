@@ -10,6 +10,8 @@ class OutlinedTextField extends StatelessWidget {
     this.controller,
     this.keyboardType,
     this.obscureText = false,
+    this.readOnly = false,
+    this.onTap,
     this.suffixIcon,
     this.inputFormatters,
     this.textStyle,
@@ -20,6 +22,8 @@ class OutlinedTextField extends StatelessWidget {
   final TextEditingController? controller;
   final TextInputType? keyboardType;
   final bool obscureText;
+  final bool readOnly;
+  final VoidCallback? onTap;
   final Widget? suffixIcon;
   final List<TextInputFormatter>? inputFormatters;
   final TextStyle? textStyle;
@@ -33,6 +37,10 @@ class OutlinedTextField extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscureText,
+      readOnly: readOnly,
+      showCursor: readOnly ? false : null,
+      enableInteractiveSelection: readOnly ? false : null,
+      onTap: onTap,
       inputFormatters: inputFormatters,
       style: textStyle ??
           const TextStyle(

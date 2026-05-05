@@ -456,9 +456,15 @@ class AppState extends ChangeNotifier {
     required String name,
     required String phone,
     required String password,
+    required String birthDate,
   }) async {
     final customer = await _api.registerCustomer(
-      CustomerRegistration(name: name, phone: phone, password: password),
+      CustomerRegistration(
+        name: name,
+        phone: phone,
+        password: password,
+        birthDate: birthDate,
+      ),
     );
     _customer = customer;
     setAuthorized(true);
@@ -466,6 +472,25 @@ class AppState extends ChangeNotifier {
     await loadCustomerAddresses();
     notifyListeners();
     return customer;
+  }
+
+  Future<Customer?> updateCustomerProfile({
+    required String name,
+    required String phone,
+    required String birthDate,
+  }) async {
+    final customerId = _customer?.id ?? 0;
+    if (customerId <= 0) return null;
+    final updated = await _api.updateCustomerProfile(
+      customerId,
+      name: name,
+      phone: phone,
+      birthDate: birthDate,
+    );
+    _customer = updated;
+    notifyListeners();
+    await _persistCustomerCache(customerId);
+    return updated;
   }
 
   Future<Customer> loginCustomer({
@@ -586,6 +611,7 @@ class AppState extends ChangeNotifier {
               'id': _customer!.id,
               'name': _customer!.name,
               'phone': _customer!.phone,
+              'birthDate': _customer!.birthDate,
             },
       'bonuses': _bonusBalance == null
           ? null

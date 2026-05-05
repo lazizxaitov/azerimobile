@@ -184,6 +184,18 @@ abstract class AppLocalizations {
   /// **'Имя Фамилия'**
   String get nameHint;
 
+  /// No description provided for @birthDateLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дата рождения'**
+  String get birthDateLabel;
+
+  /// No description provided for @birthDateHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дата рождения (ГГГГ-ММ-ДД)'**
+  String get birthDateHint;
+
   /// No description provided for @createAccount.
   ///
   /// In ru, this message translates to:

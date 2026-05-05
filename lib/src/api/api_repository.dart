@@ -91,10 +91,16 @@ class ApiRepository {
     int customerId, {
     required String name,
     required String phone,
+    String? birthDate, // YYYY-MM-DD
   }) async {
+    final payload = <String, dynamic>{'name': name, 'phone': phone};
+    final trimmedBirthDate = birthDate?.trim();
+    if (trimmedBirthDate != null && trimmedBirthDate.isNotEmpty) {
+      payload['birthDate'] = trimmedBirthDate;
+    }
     final json = await _client.patchJson(
       '/api/public/customers/$customerId/profile',
-      {'name': name, 'phone': phone},
+      payload,
     );
     final item = json['item'];
     if (item is! Map<String, dynamic>) {

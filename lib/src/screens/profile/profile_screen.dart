@@ -22,6 +22,48 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _didLoad = false;
 
+  Future<void> _editBirthDate() async {
+    final state = AppStateScope.of(context);
+    final customer = state.customer;
+    if (customer == null) return;
+    final now = DateTime.now();
+    final initial = _parseBirthDate(customer.birthDate) ??
+        DateTime(now.year - 18, now.month, now.day);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(1900, 1, 1),
+      lastDate: DateTime(now.year, now.month, now.day),
+      helpText: AppLocalizations.of(context)!.birthDateLabel,
+    );
+    if (!mounted || picked == null) return;
+    final birthDate = _formatBirthDate(picked);
+    await state.updateCustomerProfile(
+      name: customer.name,
+      phone: customer.phone,
+      birthDate: birthDate,
+    );
+  }
+
+  DateTime? _parseBirthDate(String? text) {
+    if (text == null) return null;
+    final trimmed = text.trim();
+    final m = RegExp(r'^(\\d{4})-(\\d{2})-(\\d{2})$').firstMatch(trimmed);
+    if (m == null) return null;
+    final y = int.tryParse(m.group(1)!);
+    final mo = int.tryParse(m.group(2)!);
+    final d = int.tryParse(m.group(3)!);
+    if (y == null || mo == null || d == null) return null;
+    return DateTime(y, mo, d);
+  }
+
+  String _formatBirthDate(DateTime date) {
+    final y = date.year.toString().padLeft(4, '0');
+    final m = date.month.toString().padLeft(2, '0');
+    final d = date.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
+  }
+
   Future<void> _showConfirmDialog(
     BuildContext context, {
     required String title,
@@ -289,6 +331,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   name: customer?.name ?? l10n.nameHint,
                                   phone: customer?.phone ?? l10n.phoneHint,
                                   email: '',
+                                  birthDate: customer?.birthDate,
+                                  onBirthDateTap:
+                                      customer == null ? null : _editBirthDate,
                                 ),
                                 const SizedBox(height: 14),
                                 _ActionButton(
@@ -487,11 +532,15 @@ class _ProfileCard extends StatelessWidget {
     required this.name,
     required this.phone,
     required this.email,
+    required this.birthDate,
+    required this.onBirthDateTap,
   });
 
   final String name;
   final String phone;
   final String email;
+  final String? birthDate;
+  final VoidCallback? onBirthDateTap;
 
   @override
   Widget build(BuildContext context) {
@@ -535,6 +584,53 @@ class _ProfileCard extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: Colors.black.withValues(alpha: 0.8),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Material(
+            color: Colors.white.withValues(alpha: 0.55),
+            borderRadius: BorderRadius.circular(14),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: onBirthDateTap,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.birthDateLabel,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.black.withValues(alpha: 0.75),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            (birthDate == null || birthDate!.trim().isEmpty)
+                                ? '—'
+                                : birthDate!.trim(),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.calendar_month_outlined,
+                      size: 18,
+                      color: Colors.black.withValues(alpha: 0.7),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
