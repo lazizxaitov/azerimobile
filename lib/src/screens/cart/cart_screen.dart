@@ -184,7 +184,7 @@ class _CartListCard extends StatelessWidget {
         color: const Color(0xFFF3EEE6),
         borderRadius: BorderRadius.circular(22),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      padding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
       child: entries.isEmpty
           ? Center(
               child: Text(
@@ -197,6 +197,8 @@ class _CartListCard extends StatelessWidget {
               ),
             )
           : ListView.separated(
+              primary: false,
+              padding: EdgeInsets.zero,
               itemCount: entries.length,
               separatorBuilder: (context, index) => Padding(
                 padding: const EdgeInsets.only(left: 78),
