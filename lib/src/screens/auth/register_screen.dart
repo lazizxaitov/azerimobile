@@ -88,19 +88,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   DateTime? _parseBirthDate(String text) {
     final trimmed = text.trim();
-    final iso = RegExp(r'^(\\d{4})-(\\d{2})-(\\d{2})$').firstMatch(trimmed);
-    if (iso != null) {
-      final y = int.tryParse(iso.group(1)!);
-      final mo = int.tryParse(iso.group(2)!);
-      final d = int.tryParse(iso.group(3)!);
+    final iso = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$');
+    final isoMatch = iso.firstMatch(trimmed);
+    if (isoMatch != null) {
+      final y = int.tryParse(isoMatch.group(1)!);
+      final mo = int.tryParse(isoMatch.group(2)!);
+      final d = int.tryParse(isoMatch.group(3)!);
       if (y == null || mo == null || d == null) return null;
       return DateTime(y, mo, d);
     }
-    final ui = RegExp(r'^(\\d{2})\\.(\\d{2})\\.(\\d{4})$').firstMatch(trimmed);
-    if (ui == null) return null;
-    final d = int.tryParse(ui.group(1)!);
-    final mo = int.tryParse(ui.group(2)!);
-    final y = int.tryParse(ui.group(3)!);
+    final ui = RegExp(r'^(\d{2})\.(\d{2})\.(\d{4})$');
+    final uiMatch = ui.firstMatch(trimmed);
+    if (uiMatch == null) return null;
+    final d = int.tryParse(uiMatch.group(1)!);
+    final mo = int.tryParse(uiMatch.group(2)!);
+    final y = int.tryParse(uiMatch.group(3)!);
     if (y == null || mo == null || d == null) return null;
     return DateTime(y, mo, d);
   }

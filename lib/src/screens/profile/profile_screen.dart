@@ -156,7 +156,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   DateTime? _parseBirthDate(String? text) {
     if (text == null) return null;
     final trimmed = text.trim();
-    final iso = RegExp(r'^(\\d{4})-(\\d{2})-(\\d{2})$').firstMatch(trimmed);
+    final iso = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch(trimmed);
     if (iso != null) {
       final y = int.tryParse(iso.group(1)!);
       final mo = int.tryParse(iso.group(2)!);
@@ -164,7 +164,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (y == null || mo == null || d == null) return null;
       return DateTime(y, mo, d);
     }
-    final ui = RegExp(r'^(\\d{2})\\.(\\d{2})\\.(\\d{4})$').firstMatch(trimmed);
+    final ui = RegExp(r'^(\d{2})\.(\d{2})\.(\d{4})$').firstMatch(trimmed);
     if (ui == null) return null;
     final d = int.tryParse(ui.group(1)!);
     final mo = int.tryParse(ui.group(2)!);
@@ -763,7 +763,7 @@ class _ProfileCard extends StatelessWidget {
 
   DateTime? _tryParseBirthDate(String raw) {
     final trimmed = raw.trim();
-    final iso = RegExp(r'^(\\d{4})-(\\d{2})-(\\d{2})$').firstMatch(trimmed);
+    final iso = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch(trimmed);
     if (iso == null) return null;
     final y = int.tryParse(iso.group(1)!);
     final m = int.tryParse(iso.group(2)!);
