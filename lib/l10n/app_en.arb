@@ -68,6 +68,7 @@
     }
   },
   "bonusAmountHint": "Bonus amount",
+  "bonusNotEnough": "Not enough bonus points",
   "orderComment": "Order comment",
   "grandTotal": "Grand total:",
   "confirmOrder": "Confirm order",

@@ -68,6 +68,7 @@
     }
   },
   "bonusAmountHint": "Bonus miqdori",
+  "bonusNotEnough": "Bonus yetarli emas",
   "orderComment": "Buyurtma uchun izoh",
   "grandTotal": "Jami:",
   "confirmOrder": "Buyurtmani tasdiqlash",

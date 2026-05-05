@@ -232,8 +232,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         : 0;
     final bonusAvailable = state.bonusBalanceValue;
     final bonusLimit = _effectiveBonusLimit(bonusAvailable);
+    final bonusError = _useBonus ? _bonusValidationError(bonusAvailable) : null;
     final bonusDiscount =
-        _useBonus ? _bonusToUseFor(subtotal, bonusAvailable, bonusLimit) : 0;
+        (_useBonus && bonusError == null)
+            ? _bonusToUseFor(subtotal, bonusAvailable, bonusLimit)
+            : 0;
     final total = subtotal + deliveryFee - bonusDiscount;
     final currency = state.currencySymbol.isNotEmpty
         ? state.currencySymbol
@@ -242,7 +245,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final hasPlace = _orderType == OrderType.delivery
         ? (_deliveryAddressItem?.addressLine.trim().isNotEmpty ?? false)
         : (_pickupStore?.trim().isNotEmpty ?? false);
-    final canConfirm = totalItems > 0 && hasPlace;
+    final canConfirm = totalItems > 0 && hasPlace && bonusError == null;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -340,7 +343,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               controller: _bonusController,
                               hintText: l10n.bonusAmountHint,
                               onChanged: (_) => setState(() {}),
-                              maxValue: bonusLimit,
+                              errorText: bonusError,
                             ),
                           ],
                           const SizedBox(height: 12),
@@ -437,17 +440,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     setState(() {
       _useBonus = v;
       if (!_useBonus) _bonusController.text = '';
-      if (_useBonus) {
-        final raw =
-            int.tryParse(_bonusController.text.replaceAll(' ', '')) ?? 0;
-        final maxValue = _effectiveBonusLimit(
-          AppStateScope.of(context).bonusBalanceValue,
-        );
-        if (raw > maxValue) {
-          _bonusController.text = maxValue.toString();
-        }
-      }
     });
+  }
+
+  String? _bonusValidationError(int bonusAvailable) {
+    final raw = int.tryParse(_bonusController.text.replaceAll(' ', '')) ?? 0;
+    if (raw <= 0) return null;
+    if (raw > bonusAvailable) {
+      return AppLocalizations.of(context)!.bonusNotEnough;
+    }
+    return null;
   }
 
   int _bonusToUseFor(int subtotal, int balance, int limit) {
@@ -479,6 +481,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     });
     final bonusAvailable = state.bonusBalanceValue;
     final bonusLimit = _effectiveBonusLimit(bonusAvailable);
+    final bonusError = _useBonus ? _bonusValidationError(bonusAvailable) : null;
+    if (_useBonus && bonusError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(bonusError)),
+      );
+      return;
+    }
     final bonusDiscount =
         _useBonus ? _bonusToUseFor(subtotal, bonusAvailable, bonusLimit) : 0;
     final items = state.cartQuantities.entries
@@ -1037,13 +1046,13 @@ class _BonusInput extends StatelessWidget {
     required this.controller,
     required this.hintText,
     required this.onChanged,
-    required this.maxValue,
+    required this.errorText,
   });
 
   final TextEditingController controller;
   final String hintText;
   final ValueChanged<String> onChanged;
-  final int maxValue;
+  final String? errorText;
 
   @override
   Widget build(BuildContext context) {
@@ -1058,7 +1067,6 @@ class _BonusInput extends StatelessWidget {
           onChanged: onChanged,
           inputFormatters: [
             FilteringTextInputFormatter.digitsOnly,
-            _MaxIntFormatter(max: maxValue),
           ],
           decoration: InputDecoration(
             border: InputBorder.none,
@@ -1070,6 +1078,7 @@ class _BonusInput extends StatelessWidget {
               fontWeight: FontWeight.w600,
               color: Colors.black.withValues(alpha: 0.45),
             ),
+            errorText: errorText,
           ),
           style: const TextStyle(
             fontSize: 14,
@@ -1078,31 +1087,6 @@ class _BonusInput extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _MaxIntFormatter extends TextInputFormatter {
-  _MaxIntFormatter({required this.max});
-
-  final int max;
-
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    if (max <= 0) return newValue;
-    final text = newValue.text;
-    if (text.isEmpty) return newValue;
-    final value = int.tryParse(text);
-    if (value == null) return oldValue;
-    if (value <= max) return newValue;
-
-    final clamped = max.toString();
-    return TextEditingValue(
-      text: clamped,
-      selection: TextSelection.collapsed(offset: clamped.length),
     );
   }
 }

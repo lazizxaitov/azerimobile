@@ -68,6 +68,7 @@
     }
   },
   "bonusAmountHint": "Количество бонусов",
+  "bonusNotEnough": "Недостаточно бонусов",
   "orderComment": "Комментарий к заказу",
   "grandTotal": "Итого:",
   "confirmOrder": "Подтвердить заказ",

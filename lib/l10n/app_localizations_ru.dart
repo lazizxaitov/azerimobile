@@ -202,6 +202,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bonusAmountHint => 'Количество бонусов';
 
   @override
+  String get bonusNotEnough => 'Недостаточно бонусов';
+
+  @override
   String get orderComment => 'Комментарий к заказу';
 
   @override

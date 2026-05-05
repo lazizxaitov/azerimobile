@@ -202,6 +202,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bonusAmountHint => 'Bonus amount';
 
   @override
+  String get bonusNotEnough => 'Not enough bonus points';
+
+  @override
   String get orderComment => 'Order comment';
 
   @override

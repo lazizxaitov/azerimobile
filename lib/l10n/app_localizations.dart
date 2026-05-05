@@ -478,6 +478,12 @@ abstract class AppLocalizations {
   /// **'Количество бонусов'**
   String get bonusAmountHint;
 
+  /// No description provided for @bonusNotEnough.
+  ///
+  /// In ru, this message translates to:
+  /// **'Недостаточно бонусов'**
+  String get bonusNotEnough;
+
   /// No description provided for @orderComment.
   ///
   /// In ru, this message translates to:

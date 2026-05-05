@@ -201,6 +201,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get bonusAmountHint => 'Bonus miqdori';
 
   @override
+  String get bonusNotEnough => 'Bonus yetarli emas';
+
+  @override
   String get orderComment => 'Buyurtma uchun izoh';
 
   @override
