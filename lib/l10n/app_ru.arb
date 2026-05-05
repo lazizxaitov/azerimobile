@@ -99,6 +99,8 @@
   "sampleUserAddressWorkLine": "пр. Независимости 7",
   "myBonusesTitle": "Мои бонусы",
   "bonusHistory": "История бонусов",
+  "bonusReasonRedeemed": "Бонус списан",
+  "bonusReasonManualAdjustment": "Ручная корректировка бонусов",
   "bonusPurchase": "Покупка",
   "bonusAccrual": "Начисление",
   "settingsTitle": "Настройки",

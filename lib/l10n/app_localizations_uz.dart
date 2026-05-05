@@ -294,6 +294,12 @@ class AppLocalizationsUz extends AppLocalizations {
   String get bonusHistory => 'Bonuslar tarixi';
 
   @override
+  String get bonusReasonRedeemed => 'Bonus yechildi';
+
+  @override
+  String get bonusReasonManualAdjustment => 'Bonus qo‘lda tuzatildi';
+
+  @override
   String get bonusPurchase => 'Xarid';
 
   @override

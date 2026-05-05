@@ -99,6 +99,8 @@
   "sampleUserAddressWorkLine": "7 Independence Ave.",
   "myBonusesTitle": "My bonuses",
   "bonusHistory": "Bonus history",
+  "bonusReasonRedeemed": "Bonus redeemed",
+  "bonusReasonManualAdjustment": "Manual bonus adjustment",
   "bonusPurchase": "Purchase",
   "bonusAccrual": "Accrual",
   "settingsTitle": "Settings",

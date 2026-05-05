@@ -664,6 +664,18 @@ abstract class AppLocalizations {
   /// **'История бонусов'**
   String get bonusHistory;
 
+  /// No description provided for @bonusReasonRedeemed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бонус списан'**
+  String get bonusReasonRedeemed;
+
+  /// No description provided for @bonusReasonManualAdjustment.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ручная корректировка бонусов'**
+  String get bonusReasonManualAdjustment;
+
   /// No description provided for @bonusPurchase.
   ///
   /// In ru, this message translates to:

@@ -150,9 +150,7 @@ class _BonusesScreenState extends State<BonusesScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          item.reason.isNotEmpty
-                                              ? item.reason
-                                              : l10n.bonusHistory,
+                                          _localizedReason(l10n, item.reason),
                                           style: const TextStyle(
                                             fontSize: 15,
                                             fontWeight: FontWeight.w800,
@@ -213,5 +211,18 @@ class _BonusesScreenState extends State<BonusesScreen> {
     final day = date.day.toString().padLeft(2, '0');
     final month = date.month.toString().padLeft(2, '0');
     return '$day.$month.${date.year}';
+  }
+
+  String _localizedReason(AppLocalizations l10n, String rawReason) {
+    final reason = rawReason.trim();
+    if (reason.isEmpty) return l10n.bonusHistory;
+    switch (reason) {
+      case 'Bonus redeemed':
+        return l10n.bonusReasonRedeemed;
+      case 'Manual bonus adjustment':
+        return l10n.bonusReasonManualAdjustment;
+      default:
+        return reason;
+    }
   }
 }

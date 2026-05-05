@@ -99,6 +99,8 @@
   "sampleUserAddressWorkLine": "Mustaqillik pr., 7",
   "myBonusesTitle": "Mening bonuslarim",
   "bonusHistory": "Bonuslar tarixi",
+  "bonusReasonRedeemed": "Bonus yechildi",
+  "bonusReasonManualAdjustment": "Bonus qo‘lda tuzatildi",
   "bonusPurchase": "Xarid",
   "bonusAccrual": "Hisoblandi",
   "settingsTitle": "Sozlamalar",

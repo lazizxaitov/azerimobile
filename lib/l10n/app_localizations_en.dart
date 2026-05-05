@@ -295,6 +295,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bonusHistory => 'Bonus history';
 
   @override
+  String get bonusReasonRedeemed => 'Bonus redeemed';
+
+  @override
+  String get bonusReasonManualAdjustment => 'Manual bonus adjustment';
+
+  @override
   String get bonusPurchase => 'Purchase';
 
   @override

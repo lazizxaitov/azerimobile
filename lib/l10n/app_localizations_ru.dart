@@ -295,6 +295,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bonusHistory => 'История бонусов';
 
   @override
+  String get bonusReasonRedeemed => 'Бонус списан';
+
+  @override
+  String get bonusReasonManualAdjustment => 'Ручная корректировка бонусов';
+
+  @override
   String get bonusPurchase => 'Покупка';
 
   @override
