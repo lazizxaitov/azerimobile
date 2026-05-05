@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../routing/app_router.dart';
 import 'package:azeri/l10n/app_localizations.dart';
+import '../../formatters/birth_date_input_formatter.dart';
 import '../../state/app_state.dart';
 import '../../state/app_preferences.dart';
 import '../../theme/app_gradients.dart';
@@ -26,42 +27,165 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final state = AppStateScope.of(context);
     final customer = state.customer;
     if (customer == null) return;
-    final now = DateTime.now();
-    final initial = _parseBirthDate(customer.birthDate) ??
-        DateTime(now.year - 18, now.month, now.day);
-    final picked = await showDatePicker(
+    final controller = TextEditingController(
+      text: _formatBirthDateUi(_parseBirthDate(customer.birthDate)),
+    );
+    await showDialog<void>(
       context: context,
-      initialDate: initial,
-      firstDate: DateTime(1900, 1, 1),
-      lastDate: DateTime(now.year, now.month, now.day),
-      helpText: AppLocalizations.of(context)!.birthDateLabel,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        final l10n = AppLocalizations.of(dialogContext)!;
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: AppGradients.primary,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x1A000000),
+                  blurRadius: 20,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.birthDateLabel,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                OutlinedTextField(
+                  hintText: l10n.birthDateHint,
+                  controller: controller,
+                  keyboardType: TextInputType.datetime,
+                  inputFormatters: const [BirthDateInputFormatter()],
+                  suffixIcon: IconButton(
+                    onPressed: () async {
+                      final now = DateTime.now();
+                      final initial = _parseBirthDate(controller.text) ??
+                          DateTime(now.year - 18, now.month, now.day);
+                      final picked = await showDatePicker(
+                        context: dialogContext,
+                        initialDate: initial,
+                        firstDate: DateTime(1900, 1, 1),
+                        lastDate: DateTime(now.year, now.month, now.day),
+                        helpText: l10n.birthDateLabel,
+                      );
+                      if (!mounted || picked == null) return;
+                      controller.text = _formatBirthDateUi(picked);
+                    },
+                    icon: const Icon(Icons.calendar_month_outlined),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 40,
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0x33222222)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            backgroundColor: Colors.white,
+                          ),
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          child: Text(
+                            l10n.cancel,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: SizedBox(
+                        height: 40,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: ProfileScreen._accentColor,
+                            foregroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            elevation: 0,
+                          ),
+                          onPressed: () async {
+                            final parsed = _parseBirthDate(controller.text);
+                            if (parsed == null) return;
+                            Navigator.of(dialogContext).pop();
+                            await state.updateCustomerProfile(
+                              name: customer.name,
+                              phone: customer.phone,
+                              birthDate: _formatBirthDateApi(parsed),
+                            );
+                          },
+                          child: Text(
+                            l10n.save,
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
-    if (!mounted || picked == null) return;
-    final birthDate = _formatBirthDate(picked);
-    await state.updateCustomerProfile(
-      name: customer.name,
-      phone: customer.phone,
-      birthDate: birthDate,
-    );
+    controller.dispose();
   }
 
   DateTime? _parseBirthDate(String? text) {
     if (text == null) return null;
     final trimmed = text.trim();
-    final m = RegExp(r'^(\\d{4})-(\\d{2})-(\\d{2})$').firstMatch(trimmed);
-    if (m == null) return null;
-    final y = int.tryParse(m.group(1)!);
-    final mo = int.tryParse(m.group(2)!);
-    final d = int.tryParse(m.group(3)!);
+    final iso = RegExp(r'^(\\d{4})-(\\d{2})-(\\d{2})$').firstMatch(trimmed);
+    if (iso != null) {
+      final y = int.tryParse(iso.group(1)!);
+      final mo = int.tryParse(iso.group(2)!);
+      final d = int.tryParse(iso.group(3)!);
+      if (y == null || mo == null || d == null) return null;
+      return DateTime(y, mo, d);
+    }
+    final ui = RegExp(r'^(\\d{2})\\.(\\d{2})\\.(\\d{4})$').firstMatch(trimmed);
+    if (ui == null) return null;
+    final d = int.tryParse(ui.group(1)!);
+    final mo = int.tryParse(ui.group(2)!);
+    final y = int.tryParse(ui.group(3)!);
     if (y == null || mo == null || d == null) return null;
     return DateTime(y, mo, d);
   }
 
-  String _formatBirthDate(DateTime date) {
+  String _formatBirthDateApi(DateTime date) {
     final y = date.year.toString().padLeft(4, '0');
     final m = date.month.toString().padLeft(2, '0');
     final d = date.day.toString().padLeft(2, '0');
     return '$y-$m-$d';
+  }
+
+  String _formatBirthDateUi(DateTime? date) {
+    if (date == null) return '';
+    final d = date.day.toString().padLeft(2, '0');
+    final m = date.month.toString().padLeft(2, '0');
+    final y = date.year.toString().padLeft(4, '0');
+    return '$d.$m.$y';
   }
 
   Future<void> _showConfirmDialog(
@@ -544,6 +668,7 @@ class _ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final date = birthDate == null ? null : _tryParseBirthDate(birthDate!);
     return Container(
       decoration: BoxDecoration(
         gradient: AppGradients.primary,
@@ -611,9 +736,7 @@ class _ProfileCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            (birthDate == null || birthDate!.trim().isEmpty)
-                                ? '—'
-                                : birthDate!.trim(),
+                            (date == null) ? '—' : _formatBirthDateUi(date),
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
@@ -636,6 +759,24 @@ class _ProfileCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  DateTime? _tryParseBirthDate(String raw) {
+    final trimmed = raw.trim();
+    final iso = RegExp(r'^(\\d{4})-(\\d{2})-(\\d{2})$').firstMatch(trimmed);
+    if (iso == null) return null;
+    final y = int.tryParse(iso.group(1)!);
+    final m = int.tryParse(iso.group(2)!);
+    final d = int.tryParse(iso.group(3)!);
+    if (y == null || m == null || d == null) return null;
+    return DateTime(y, m, d);
+  }
+
+  String _formatBirthDateUi(DateTime date) {
+    final d = date.day.toString().padLeft(2, '0');
+    final m = date.month.toString().padLeft(2, '0');
+    final y = date.year.toString().padLeft(4, '0');
+    return '$d.$m.$y';
   }
 }
 

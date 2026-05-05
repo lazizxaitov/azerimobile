@@ -193,7 +193,7 @@ abstract class AppLocalizations {
   /// No description provided for @birthDateHint.
   ///
   /// In ru, this message translates to:
-  /// **'Дата рождения (ГГГГ-ММ-ДД)'**
+  /// **'Дата рождения (ДД.ММ.ГГГГ)'**
   String get birthDateHint;
 
   /// No description provided for @createAccount.

@@ -15,7 +15,7 @@
   "registerSubtitle": "Profil yarating",
   "nameHint": "Ism Familiya",
   "birthDateLabel": "Tug‘ilgan sana",
-  "birthDateHint": "Tug‘ilgan sana (YYYY-MM-DD)",
+  "birthDateHint": "Tug‘ilgan sana (DD.MM.YYYY)",
   "createAccount": "Profil yaratish",
   "alreadyHaveAccount": "Profilingiz bormi?",
   "cartTitle": "Savat",

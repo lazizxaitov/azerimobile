@@ -15,7 +15,7 @@
   "registerSubtitle": "Create your account",
   "nameHint": "Full name",
   "birthDateLabel": "Date of birth",
-  "birthDateHint": "Date of birth (YYYY-MM-DD)",
+  "birthDateHint": "Date of birth (DD.MM.YYYY)",
   "createAccount": "Create account",
   "alreadyHaveAccount": "Already have an account?",
   "cartTitle": "Cart",

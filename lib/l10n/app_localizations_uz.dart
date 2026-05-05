@@ -54,7 +54,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get birthDateLabel => 'Tug‘ilgan sana';
 
   @override
-  String get birthDateHint => 'Tug‘ilgan sana (YYYY-MM-DD)';
+  String get birthDateHint => 'Tug‘ilgan sana (DD.MM.YYYY)';
 
   @override
   String get createAccount => 'Profil yaratish';

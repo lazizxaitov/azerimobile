@@ -54,7 +54,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get birthDateLabel => 'Дата рождения';
 
   @override
-  String get birthDateHint => 'Дата рождения (ГГГГ-ММ-ДД)';
+  String get birthDateHint => 'Дата рождения (ДД.ММ.ГГГГ)';
 
   @override
   String get createAccount => 'Создать аккаунт';

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:azeri/l10n/app_localizations.dart';
 
 import '../../routing/app_router.dart';
+import '../../formatters/birth_date_input_formatter.dart';
 import '../../formatters/uzbek_phone_input_formatter.dart';
 import '../../theme/app_gradients.dart';
 import '../../widgets/brand_logo.dart';
@@ -82,35 +83,62 @@ class _RegisterScreenState extends State<RegisterScreen> {
       helpText: AppLocalizations.of(context)!.birthDateLabel,
     );
     if (!mounted || picked == null) return;
-    _birthDateController.text = _formatBirthDate(picked);
+    _birthDateController.text = _formatBirthDateUi(picked);
   }
 
   DateTime? _parseBirthDate(String text) {
     final trimmed = text.trim();
-    final m = RegExp(r'^(\\d{4})-(\\d{2})-(\\d{2})$').firstMatch(trimmed);
-    if (m == null) return null;
-    final y = int.tryParse(m.group(1)!);
-    final mo = int.tryParse(m.group(2)!);
-    final d = int.tryParse(m.group(3)!);
+    final iso = RegExp(r'^(\\d{4})-(\\d{2})-(\\d{2})$').firstMatch(trimmed);
+    if (iso != null) {
+      final y = int.tryParse(iso.group(1)!);
+      final mo = int.tryParse(iso.group(2)!);
+      final d = int.tryParse(iso.group(3)!);
+      if (y == null || mo == null || d == null) return null;
+      return DateTime(y, mo, d);
+    }
+    final ui = RegExp(r'^(\\d{2})\\.(\\d{2})\\.(\\d{4})$').firstMatch(trimmed);
+    if (ui == null) return null;
+    final d = int.tryParse(ui.group(1)!);
+    final mo = int.tryParse(ui.group(2)!);
+    final y = int.tryParse(ui.group(3)!);
     if (y == null || mo == null || d == null) return null;
     return DateTime(y, mo, d);
   }
 
-  String _formatBirthDate(DateTime date) {
+  String _formatBirthDateApi(DateTime date) {
     final y = date.year.toString().padLeft(4, '0');
     final m = date.month.toString().padLeft(2, '0');
     final d = date.day.toString().padLeft(2, '0');
     return '$y-$m-$d';
   }
 
+  String _formatBirthDateUi(DateTime date) {
+    final d = date.day.toString().padLeft(2, '0');
+    final m = date.month.toString().padLeft(2, '0');
+    final y = date.year.toString().padLeft(4, '0');
+    return '$d.$m.$y';
+  }
+
   Future<void> _submit() async {
     final name = _nameController.text.trim();
     final phone = _phoneController.text.trim();
     final password = _passwordController.text.trim();
-    final birthDate = _birthDateController.text.trim();
-    if (name.isEmpty || phone.isEmpty || password.isEmpty || birthDate.isEmpty) {
+    final birthDateRaw = _birthDateController.text.trim();
+    final parsedBirthDate = _parseBirthDate(birthDateRaw);
+    if (name.isEmpty ||
+        phone.isEmpty ||
+        password.isEmpty ||
+        birthDateRaw.isEmpty) {
       return;
     }
+    if (parsedBirthDate == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.birthDateHint)),
+      );
+      return;
+    }
+    final birthDate = _formatBirthDateApi(parsedBirthDate);
     setState(() => _isSubmitting = true);
     try {
       final customer = await AppStateScope.of(context).registerCustomer(
@@ -206,8 +234,8 @@ class _RegisterCard extends StatelessWidget {
           OutlinedTextField(
             hintText: l10n.birthDateHint,
             controller: birthDateController,
-            readOnly: true,
-            onTap: onPickBirthDate,
+            keyboardType: TextInputType.datetime,
+            inputFormatters: const [BirthDateInputFormatter()],
             suffixIcon: IconButton(
               onPressed: onPickBirthDate,
               icon: const Icon(Icons.calendar_month_outlined),

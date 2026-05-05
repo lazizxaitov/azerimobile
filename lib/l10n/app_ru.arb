@@ -15,7 +15,7 @@
   "registerSubtitle": "Создайте свой аккаунт",
   "nameHint": "Имя Фамилия",
   "birthDateLabel": "Дата рождения",
-  "birthDateHint": "Дата рождения (ГГГГ-ММ-ДД)",
+  "birthDateHint": "Дата рождения (ДД.ММ.ГГГГ)",
   "createAccount": "Создать аккаунт",
   "alreadyHaveAccount": "Уже есть аккаунт?",
   "cartTitle": "Корзина",
