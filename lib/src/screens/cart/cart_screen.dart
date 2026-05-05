@@ -184,7 +184,7 @@ class _CartListCard extends StatelessWidget {
         color: const Color(0xFFF3EEE6),
         borderRadius: BorderRadius.circular(22),
       ),
-      padding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
+      padding: const EdgeInsets.fromLTRB(18, 8, 18, 14),
       child: entries.isEmpty
           ? Center(
               child: Text(
