@@ -33,6 +33,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPassword => 'Forgot password?';
 
   @override
+  String get forgotPasswordTitle => 'Password recovery';
+
+  @override
+  String get forgotPasswordMessage => 'Call support to recover your password.';
+
+  @override
+  String get callSupport => 'Call support';
+
+  @override
   String get loginButton => 'Sign in';
 
   @override
@@ -186,6 +195,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get payByCash => 'Cash';
+
+  @override
+  String get cardPaymentMethodsTitle => 'Choose payment method';
+
+  @override
+  String get cardPaymentQrTitle => 'Scan the QR code to pay';
+
+  @override
+  String get imageLoadError => 'Failed to load image';
 
   @override
   String get copy => 'Copy';

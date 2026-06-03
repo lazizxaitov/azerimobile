@@ -749,6 +749,7 @@ class AppState extends ChangeNotifier {
   Map<String, dynamic> _settingsToJson(AppSettings settings) => {
         'cafe_name': settings.cafeName,
         'phone': settings.phone,
+        'support_phone': settings.supportPhone,
         'address': settings.address,
         'work_hours': settings.workHours,
         'delivery_fee': settings.deliveryFee,
@@ -777,6 +778,15 @@ class AppState extends ChangeNotifier {
         'card_payment_unavailable_body_en': settings.cardPaymentUnavailableBodyEn,
         'card_payment_unavailable_card_number':
             settings.cardPaymentUnavailableCardNumber,
+        'card_payment_methods': settings.cardPaymentMethods
+            .map(
+              (item) => {
+                'code': item.code,
+                'title': item.title,
+                'image_url': item.imageUrl,
+              },
+            )
+            .toList(growable: false),
       };
 
   Map<String, dynamic> _notificationToJson(NotificationItem item) => {

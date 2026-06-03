@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:azeri/l10n/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../routing/app_router.dart';
 import '../../formatters/uzbek_phone_input_formatter.dart';
@@ -65,6 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 onTogglePassword: () => setState(
                   () => _obscurePassword = !_obscurePassword,
                 ),
+                onForgotPassword: _showForgotPasswordDialog,
                 isSubmitting: _isSubmitting,
                 onSubmit: _submit,
               ),
@@ -97,6 +99,119 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
   }
+
+  Future<void> _showForgotPasswordDialog() async {
+    final l10n = AppLocalizations.of(context)!;
+    final supportPhone =
+        AppStateScope.of(context).settings?.supportPhone.trim() ?? '';
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: AppGradients.primary,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x1A000000),
+                  blurRadius: 20,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.forgotPasswordTitle,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  l10n.forgotPasswordMessage,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black.withValues(alpha: 0.75),
+                  ),
+                ),
+                if (supportPhone.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    supportPhone,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 14),
+                SizedBox(
+                  height: 46,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: supportPhone.isEmpty
+                        ? null
+                        : () async {
+                            final uri = Uri(scheme: 'tel', path: supportPhone);
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(uri);
+                            }
+                          },
+                    child: Text(
+                      l10n.callSupport,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 46,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.black,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: const BorderSide(color: Color(0x33222222)),
+                      ),
+                    ),
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: Text(
+                      l10n.close,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _LoginCard extends StatelessWidget {
@@ -106,6 +221,7 @@ class _LoginCard extends StatelessWidget {
     required this.phoneController,
     required this.passwordController,
     required this.onTogglePassword,
+    required this.onForgotPassword,
     required this.onSubmit,
     required this.isSubmitting,
   });
@@ -115,6 +231,7 @@ class _LoginCard extends StatelessWidget {
   final TextEditingController phoneController;
   final TextEditingController passwordController;
   final VoidCallback onTogglePassword;
+  final VoidCallback onForgotPassword;
   final VoidCallback onSubmit;
   final bool isSubmitting;
 
@@ -198,7 +315,7 @@ class _LoginCard extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: () {},
+              onPressed: onForgotPassword,
               style: TextButton.styleFrom(
                 foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(horizontal: 8),

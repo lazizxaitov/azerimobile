@@ -33,6 +33,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get forgotPassword => 'Забыл пароль ?';
 
   @override
+  String get forgotPasswordTitle => 'Восстановление пароля';
+
+  @override
+  String get forgotPasswordMessage =>
+      'Позвоните в службу поддержки для восстановления пароля.';
+
+  @override
+  String get callSupport => 'Позвонить в поддержку';
+
+  @override
   String get loginButton => 'Войти';
 
   @override
@@ -188,6 +198,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get payByCash => 'Наличными';
 
   @override
+  String get cardPaymentMethodsTitle => 'Выберите способ оплаты';
+
+  @override
+  String get cardPaymentQrTitle => 'Сканируйте QR-код для оплаты';
+
+  @override
+  String get imageLoadError => 'Не удалось загрузить изображение';
+
+  @override
   String get copy => 'Копировать';
 
   @override
@@ -322,7 +341,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get languageUzbek => 'Oʻzbekcha';
 
   @override
-  String get languageEnglish => 'Английский';
+  String get languageEnglish => 'English';
 
   @override
   String get changePassword => 'Изменить пароль';

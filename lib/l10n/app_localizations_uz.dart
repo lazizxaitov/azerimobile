@@ -33,6 +33,16 @@ class AppLocalizationsUz extends AppLocalizations {
   String get forgotPassword => 'Parolni unutdingizmi?';
 
   @override
+  String get forgotPasswordTitle => 'Parolni tiklash';
+
+  @override
+  String get forgotPasswordMessage =>
+      'Parolni tiklash uchun texnik yordamga qo‘ng‘iroq qiling.';
+
+  @override
+  String get callSupport => 'Yordamga qo‘ng‘iroq qilish';
+
+  @override
   String get loginButton => 'Kirish';
 
   @override
@@ -187,6 +197,15 @@ class AppLocalizationsUz extends AppLocalizations {
   String get payByCash => 'Naqd';
 
   @override
+  String get cardPaymentMethodsTitle => 'To‘lov usulini tanlang';
+
+  @override
+  String get cardPaymentQrTitle => 'To‘lash uchun QR-kodni skaner qiling';
+
+  @override
+  String get imageLoadError => 'Rasmni yuklab bo‘lmadi';
+
+  @override
   String get copy => 'Nusxalash';
 
   @override
@@ -321,7 +340,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get languageUzbek => 'Oʻzbekcha';
 
   @override
-  String get languageEnglish => 'Inglizcha';
+  String get languageEnglish => 'English';
 
   @override
   String get changePassword => 'Parolni o‘zgartirish';

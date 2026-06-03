@@ -148,6 +148,24 @@ abstract class AppLocalizations {
   /// **'Забыл пароль ?'**
   String get forgotPassword;
 
+  /// No description provided for @forgotPasswordTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Восстановление пароля'**
+  String get forgotPasswordTitle;
+
+  /// No description provided for @forgotPasswordMessage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Позвоните в службу поддержки для восстановления пароля.'**
+  String get forgotPasswordMessage;
+
+  /// No description provided for @callSupport.
+  ///
+  /// In ru, this message translates to:
+  /// **'Позвонить в поддержку'**
+  String get callSupport;
+
   /// No description provided for @loginButton.
   ///
   /// In ru, this message translates to:
@@ -454,6 +472,24 @@ abstract class AppLocalizations {
   /// **'Наличными'**
   String get payByCash;
 
+  /// No description provided for @cardPaymentMethodsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите способ оплаты'**
+  String get cardPaymentMethodsTitle;
+
+  /// No description provided for @cardPaymentQrTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сканируйте QR-код для оплаты'**
+  String get cardPaymentQrTitle;
+
+  /// No description provided for @imageLoadError.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить изображение'**
+  String get imageLoadError;
+
   /// No description provided for @copy.
   ///
   /// In ru, this message translates to:
@@ -721,7 +757,7 @@ abstract class AppLocalizations {
   /// No description provided for @languageEnglish.
   ///
   /// In ru, this message translates to:
-  /// **'Английский'**
+  /// **'English'**
   String get languageEnglish;
 
   /// No description provided for @changePassword.

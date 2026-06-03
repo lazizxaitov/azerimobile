@@ -1,7 +1,30 @@
+class CardPaymentMethodOption {
+  const CardPaymentMethodOption({
+    required this.code,
+    required this.title,
+    required this.imageUrl,
+  });
+
+  final String code;
+  final String title;
+  final String imageUrl;
+
+  factory CardPaymentMethodOption.fromJson(Map<String, dynamic> json) {
+    return CardPaymentMethodOption(
+      code: _asString(json['code']).trim(),
+      title: _asString(json['title']).trim(),
+      imageUrl: _asString(
+        json['image_url'] ?? json['imageUrl'] ?? json['url'],
+      ).trim(),
+    );
+  }
+}
+
 class AppSettings {
   const AppSettings({
     required this.cafeName,
     required this.phone,
+    required this.supportPhone,
     required this.address,
     required this.workHours,
     required this.deliveryFee,
@@ -29,10 +52,12 @@ class AppSettings {
     required this.cardPaymentUnavailableBodyUz,
     required this.cardPaymentUnavailableBodyEn,
     required this.cardPaymentUnavailableCardNumber,
+    required this.cardPaymentMethods,
   });
 
   final String cafeName;
   final String phone;
+  final String supportPhone;
   final String address;
   final String workHours;
   final int deliveryFee;
@@ -60,6 +85,7 @@ class AppSettings {
   final String? cardPaymentUnavailableBodyUz;
   final String? cardPaymentUnavailableBodyEn;
   final String? cardPaymentUnavailableCardNumber;
+  final List<CardPaymentMethodOption> cardPaymentMethods;
 
   factory AppSettings.fromJson(Map<String, dynamic> json) {
     final cardPaymentText =
@@ -71,9 +97,12 @@ class AppSettings {
             _asNullableString(json['card_payment_off_body']) ??
             _asNullableString(json['card_payment_off_text']);
     final extractedCardNumber = _extractCardNumber(cardPaymentText);
+    final cardPaymentMethods = _parseCardPaymentMethods(json);
     return AppSettings(
       cafeName: _asString(json['cafe_name']),
       phone: _asString(json['phone']),
+      supportPhone:
+          _asNullableString(json['support_phone']) ?? _asString(json['phone']),
       address: _asString(json['address']),
       workHours: _asString(json['work_hours']),
       deliveryFee: _asInt(json['delivery_fee']),
@@ -162,6 +191,7 @@ class AppSettings {
             json['card_number'],
       ) ??
           extractedCardNumber,
+      cardPaymentMethods: cardPaymentMethods,
     );
   }
 
@@ -245,4 +275,42 @@ String? _extractCardNumber(String? text) {
     (m) => '${m.group(0)} ',
   ).trimRight();
   return grouped;
+}
+
+List<CardPaymentMethodOption> _parseCardPaymentMethods(
+  Map<String, dynamic> json,
+) {
+  final raw = json['card_payment_methods'];
+  if (raw is List) {
+    final parsed = raw
+        .whereType<Map>()
+        .map(
+          (item) => CardPaymentMethodOption.fromJson(
+            item.map((key, value) => MapEntry(key.toString(), value)),
+          ),
+        )
+        .where(
+          (item) =>
+              item.code.isNotEmpty &&
+              item.title.isNotEmpty &&
+              item.imageUrl.isNotEmpty,
+        )
+        .toList(growable: false);
+    if (parsed.isNotEmpty) {
+      return parsed;
+    }
+  }
+
+  return <CardPaymentMethodOption>[
+    CardPaymentMethodOption(
+      code: 'payme',
+      title: 'Payme',
+      imageUrl: _asString(json['payme_qr_image_url']).trim(),
+    ),
+    CardPaymentMethodOption(
+      code: 'click',
+      title: 'Click',
+      imageUrl: _asString(json['click_qr_image_url']).trim(),
+    ),
+  ].where((item) => item.imageUrl.isNotEmpty).toList(growable: false);
 }

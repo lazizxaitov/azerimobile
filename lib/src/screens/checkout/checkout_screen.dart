@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:azeri/l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 
+import '../../api/api_config.dart';
 import '../../models/address.dart';
 import '../../models/order.dart';
+import '../../models/settings.dart';
 import '../../routing/app_router.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_gradients.dart';
@@ -25,7 +27,8 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   OrderType _orderType = OrderType.delivery;
-  PaymentMethod _paymentMethod = PaymentMethod.card;
+  PaymentMethod _paymentMethod = PaymentMethod.cash;
+  CardPaymentMethodOption? _selectedCardPaymentMethod;
 
   Address? _deliveryAddressItem;
   String? _pickupStore;
@@ -44,6 +47,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   bool get _isCashEnabled =>
       AppStateScope.of(context).settings?.paymentCashEnabled ?? true;
 
+  List<CardPaymentMethodOption> get _cardPaymentMethods {
+    final settings = AppStateScope.of(context).settings;
+    if (settings == null) return const <CardPaymentMethodOption>[];
+    return settings.cardPaymentMethods
+        .where((item) => item.imageUrl.trim().isNotEmpty)
+        .toList(growable: false);
+  }
+
   @override
   void dispose() {
     _bonusController.dispose();
@@ -54,7 +65,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void _ensurePaymentMethodAllowed() {
     if (_paymentMethod == PaymentMethod.card && !_isCardEnabled) {
       if (_isCashEnabled) {
-        setState(() => _paymentMethod = PaymentMethod.cash);
+        setState(() {
+          _paymentMethod = PaymentMethod.cash;
+          _selectedCardPaymentMethod = null;
+        });
       }
       return;
     }
@@ -73,7 +87,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return;
     }
 
-    setState(() => _paymentMethod = method);
+    setState(() {
+      _paymentMethod = method;
+      if (method == PaymentMethod.cash) {
+        _selectedCardPaymentMethod = null;
+      }
+    });
     if (!mounted) return;
     if (method != PaymentMethod.card) return;
 
@@ -82,12 +101,245 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final localeCode = Localizations.localeOf(context).languageCode;
     final title = settings.cardPaymentInfoTitleForLocale(localeCode);
     final body = settings.cardPaymentInfoBodyForLocale(localeCode);
+    final cardPaymentMethods = _cardPaymentMethods;
+    if (cardPaymentMethods.isNotEmpty) {
+      final selectedMethod = await _showCardPaymentMethodsSheet(
+        methods: cardPaymentMethods,
+        title: title,
+        body: body,
+      );
+      if (!mounted || selectedMethod == null) return;
+      setState(() => _selectedCardPaymentMethod = selectedMethod);
+      await _showCardPaymentImageDialog(selectedMethod);
+      return;
+    }
     if ((title == null || title.isEmpty) && (body == null || body.isEmpty)) {
       return;
     }
     await _showCardPaymentInfoDialog(
       title: title,
       body: body,
+    );
+  }
+
+  Future<CardPaymentMethodOption?> _showCardPaymentMethodsSheet({
+    required List<CardPaymentMethodOption> methods,
+    required String? title,
+    required String? body,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+    return showModalBottomSheet<CardPaymentMethodOption>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.35),
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        final viewInsets = MediaQuery.viewInsetsOf(sheetContext);
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + viewInsets.bottom),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: AppGradients.primary,
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x1A000000),
+                    blurRadius: 20,
+                    offset: Offset(0, 8),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 42,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    (title == null || title.trim().isEmpty)
+                        ? l10n.cardPaymentMethodsTitle
+                        : title.trim(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...methods.map(
+                    (method) => Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: _TextButtonCard(
+                        label: method.title,
+                        onTap: () => Navigator.of(sheetContext).pop(method),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    height: 46,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      onPressed: () => Navigator.of(sheetContext).pop(),
+                      child: Text(l10n.close),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showCardPaymentImageDialog(
+    CardPaymentMethodOption method,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 520, maxHeight: 720),
+            decoration: BoxDecoration(
+              gradient: AppGradients.primary,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x1A000000),
+                  blurRadius: 20,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  method.title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  l10n.cardPaymentQrTitle,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black.withValues(alpha: 0.72),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Flexible(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      color: Colors.white,
+                      child: InteractiveViewer(
+                        minScale: 1,
+                        maxScale: 4,
+                        child: Image.network(
+                          ApiConfig.resolveImageUrl(method.imageUrl),
+                          fit: BoxFit.contain,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return const SizedBox(
+                              height: 280,
+                              child: Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return SizedBox(
+                              height: 280,
+                              child: Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                  ),
+                                  child: Text(
+                                    l10n.imageLoadError,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  height: 46,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: Text(l10n.close),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -232,6 +484,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         : 0;
     final bonusAvailable = state.bonusBalanceValue;
     final bonusError = _useBonus ? _bonusValidationError(bonusAvailable) : null;
+    final cardMethodRequired =
+        _paymentMethod == PaymentMethod.card && _cardPaymentMethods.isNotEmpty;
     final bonusDiscount =
         (_useBonus && bonusError == null)
             ? _bonusToUseFor(subtotal, bonusAvailable)
@@ -244,7 +498,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final hasPlace = _orderType == OrderType.delivery
         ? (_deliveryAddressItem?.addressLine.trim().isNotEmpty ?? false)
         : (_pickupStore?.trim().isNotEmpty ?? false);
-    final canConfirm = totalItems > 0 && hasPlace && bonusError == null;
+    final canConfirm =
+        totalItems > 0 &&
+        hasPlace &&
+        bonusError == null &&
+        (!cardMethodRequired || _selectedCardPaymentMethod != null);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -320,6 +578,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               PaymentMethod.cash,
                             ),
                           ),
+                          if (_paymentMethod == PaymentMethod.card &&
+                              _selectedCardPaymentMethod != null) ...[
+                            const SizedBox(height: 10),
+                            Text(
+                              '${l10n.paymentMethod}: ${_selectedCardPaymentMethod!.title}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.black.withValues(alpha: 0.72),
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 14),
                           _BonusToggle(
                             value: _useBonus,
@@ -476,6 +746,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       );
       return;
     }
+    if (_paymentMethod == PaymentMethod.card &&
+        _cardPaymentMethods.isNotEmpty &&
+        _selectedCardPaymentMethod == null) {
+      final settings = state.settings;
+      if (settings == null) return;
+      final localeCode = Localizations.localeOf(context).languageCode;
+      final selectedMethod = await _showCardPaymentMethodsSheet(
+        methods: _cardPaymentMethods,
+        title: settings.cardPaymentInfoTitleForLocale(localeCode),
+        body: settings.cardPaymentInfoBodyForLocale(localeCode),
+      );
+      if (!mounted || selectedMethod == null) return;
+      setState(() => _selectedCardPaymentMethod = selectedMethod);
+      await _showCardPaymentImageDialog(selectedMethod);
+    }
     final bonusDiscount =
         _useBonus ? _bonusToUseFor(subtotal, bonusAvailable) : 0;
     final items = state.cartQuantities.entries
@@ -514,7 +799,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           : null,
       comment: _orderComment,
       bonusUsed: _useBonus ? bonusDiscount : 0,
-      paymentMethod: _paymentMethod == PaymentMethod.card ? 'card' : 'cash',
+      paymentMethod: _paymentMethod == PaymentMethod.card
+          ? (_selectedCardPaymentMethod?.code ?? 'card')
+          : 'cash',
       items: items,
     );
 
